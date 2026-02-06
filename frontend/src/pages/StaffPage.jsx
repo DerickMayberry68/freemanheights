@@ -6,34 +6,41 @@ export default function StaffPage() {
   const { data: staff, loading } = useStaff()
 
   return (
-    <div className="py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-secondary-dark mb-2">Our Staff</h1>
-          <p className="text-secondary-light">Meet the team serving Freeman Heights</p>
+    <div>
+      <div className="page-banner">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h1>Our Staff</h1>
+          <p>Meet the team serving Freeman Heights</p>
         </div>
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
-          {loading && (
-            <>
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-xl h-48 animate-pulse shadow-md" />
-              ))}
-            </>
-          )}
-          {!loading && staff.length === 0 && (
-            <div className="col-span-full text-center py-12 text-secondary-light">
-              <p>Staff information coming soon.</p>
+      <div className="py-14">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-8 mb-20">
+            {loading && (
+              <>
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-white rounded-xl h-48 animate-pulse border border-primary/10" />
+                ))}
+              </>
+            )}
+            {!loading && staff.length === 0 && (
+              <div className="col-span-full text-center py-14 text-secondary-light">
+                <p>Staff information coming soon.</p>
+              </div>
+            )}
+            {!loading && staff.map((member) => (
+              <StaffCard key={member.id} staff={member} />
+            ))}
+          </div>
+
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-serif font-bold text-secondary-dark mb-3">Prayer Request</h2>
+              <div className="section-divider" />
             </div>
-          )}
-          {!loading && staff.map((member) => (
-            <StaffCard key={member.id} staff={member} />
-          ))}
-        </div>
-
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-secondary-dark mb-6 text-center">Prayer Request</h2>
-          <PrayerRequestForm />
+            <PrayerRequestForm />
+          </div>
         </div>
       </div>
     </div>

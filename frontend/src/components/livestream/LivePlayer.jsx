@@ -7,7 +7,7 @@ export default function LivePlayer({ videoUrl }) {
 
   if (embedUrl) {
     return (
-      <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden shadow-xl bg-black">
+      <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden border border-primary/10 bg-secondary-dark">
         <iframe
           src={embedUrl}
           title="Livestream"
@@ -21,17 +21,17 @@ export default function LivePlayer({ videoUrl }) {
 
   if (isDirectVideo) {
     return (
-      <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden shadow-xl bg-black">
+      <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden border border-primary/10 bg-secondary-dark">
         <video src={videoUrl} controls autoPlay playsInline className="w-full h-full" />
       </div>
     )
   }
 
   return (
-    <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden shadow-xl bg-secondary-dark/90 flex items-center justify-center text-white">
+    <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden border border-primary/10 bg-cream-dark flex items-center justify-center">
       <div className="text-center px-6">
-        <p className="text-xl font-medium mb-2">Livestream not currently active</p>
-        <p className="text-white/80">Join us in person at {CHURCH.fullAddress} — or check back during service times for the live stream.</p>
+        <p className="text-xl font-serif font-medium text-secondary-dark mb-2">Livestream not currently active</p>
+        <p className="text-secondary-light">Join us in person at {CHURCH.fullAddress} &mdash; or check back during service times for the live stream.</p>
       </div>
     </div>
   )

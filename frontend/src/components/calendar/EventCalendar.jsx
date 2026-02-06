@@ -70,9 +70,10 @@ export default function EventCalendar() {
 
   const eventStyleGetter = () => ({
     style: {
-      backgroundColor: 'var(--tw-gradient-from, #D4A84B)',
+      backgroundColor: '#D4A84B',
       borderRadius: '6px',
       cursor: 'pointer',
+      border: 'none',
     },
   })
 
@@ -92,19 +93,19 @@ export default function EventCalendar() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-8 flex items-center justify-center min-h-[400px]">
+      <div className="bg-white rounded-xl border border-primary/10 p-8 flex items-center justify-center min-h-[400px]">
         <p className="text-secondary-light">Loading calendar...</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden p-4 md:p-6">
+    <div className="bg-white rounded-xl border border-primary/10 overflow-hidden p-4 md:p-6">
       {approved && (
         <div className="mb-4 flex justify-end">
           <a
             href="/admin/events"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-secondary-dark text-sm font-medium rounded-lg hover:opacity-90"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
           >
             Manage Events
           </a>
@@ -128,15 +129,15 @@ export default function EventCalendar() {
       </div>
 
       {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={(e) => { if (e.target === e.currentTarget) setSelectedEvent(null) }}>
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full" role="dialog" aria-modal="true" aria-label="Event details">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold text-secondary-dark">{selectedEvent.title}</h3>
-              <button type="button" onClick={() => setSelectedEvent(null)} className="p-2 rounded-lg hover:bg-gray-100">
-                <XMarkIcon className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-dark/30 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setSelectedEvent(null) }}>
+          <div className="bg-white rounded-xl border border-primary/10 max-w-md w-full" role="dialog" aria-modal="true" aria-label="Event details">
+            <div className="flex items-center justify-between p-5 border-b border-primary/10">
+              <h3 className="text-lg font-serif font-semibold text-secondary-dark">{selectedEvent.title}</h3>
+              <button type="button" onClick={() => setSelectedEvent(null)} className="p-2 rounded-lg hover:bg-primary-50 transition-colors">
+                <XMarkIcon className="h-5 w-5 text-secondary" />
               </button>
             </div>
-            <div className="p-4 space-y-3">
+            <div className="p-5 space-y-3">
               <div className="flex items-start gap-3">
                 <ClockIcon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <div>
@@ -145,7 +146,7 @@ export default function EventCalendar() {
                   </p>
                   <p className="text-sm text-secondary-light">
                     {format(new Date(selectedEvent.event_date), 'h:mm a')}
-                    {selectedEvent.end_date && ` – ${format(new Date(selectedEvent.end_date), 'h:mm a')}`}
+                    {selectedEvent.end_date && ` \u2013 ${format(new Date(selectedEvent.end_date), 'h:mm a')}`}
                   </p>
                 </div>
               </div>
@@ -156,14 +157,14 @@ export default function EventCalendar() {
                 </div>
               )}
               {selectedEvent.description && (
-                <p className="text-sm text-secondary-light pt-2 border-t">{selectedEvent.description}</p>
+                <p className="text-sm text-secondary-light pt-2 border-t border-primary/10">{selectedEvent.description}</p>
               )}
             </div>
-            <div className="p-4 border-t flex justify-end">
+            <div className="p-5 border-t border-primary/10 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 text-sm"
+                className="px-4 py-2 border border-primary/20 rounded-lg font-medium hover:bg-primary-50 text-sm transition-colors"
               >
                 Close
               </button>

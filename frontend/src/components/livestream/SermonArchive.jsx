@@ -41,20 +41,20 @@ export default function SermonArchive() {
 
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-8">
         <input
           type="search"
           placeholder="Search sermons by title, speaker, or Scripture..."
           value={search}
           onChange={handleSearchChange}
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full max-w-md px-4 py-2.5 border border-primary/20 rounded-lg bg-cream focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
         />
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading && (
           <>
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-xl h-72 animate-pulse shadow-md" />
+              <div key={i} className="bg-white rounded-xl h-72 animate-pulse border border-primary/10" />
             ))}
           </>
         )}
@@ -63,27 +63,29 @@ export default function SermonArchive() {
           return (
             <div
               key={sermon.id}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-100"
+              className="bg-white rounded-xl overflow-hidden border border-primary/10 hover:border-primary/30 hover:shadow-md transition-all"
             >
               <a href={sermon.video_url || '#'} target="_blank" rel="noopener noreferrer" className="block group">
-                <div className="aspect-video bg-gray-900 relative">
+                <div className="aspect-video bg-cream-dark relative">
                   {thumbnail ? (
                     <img
                       src={thumbnail}
                       alt={sermon.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full bg-secondary flex items-center justify-center">
-                      <PlayIcon className="h-16 w-16 text-white/60" />
+                    <div className="w-full h-full bg-cream-dark flex items-center justify-center">
+                      <PlayIcon className="h-14 w-14 text-primary/40" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <PlayIcon className="h-14 w-14 text-white" />
+                  <div className="absolute inset-0 bg-secondary-dark/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
+                      <PlayIcon className="h-7 w-7 text-primary ml-0.5" />
+                    </div>
                   </div>
                 </div>
               </a>
-              <div className="p-4">
+              <div className="p-5">
                 <p className="text-sm text-primary font-medium">{sermon.speaker}</p>
                 <h3 className="font-semibold text-secondary-dark mt-1">{sermon.title}</h3>
                 {sermon.scripture_reference && (
@@ -93,13 +95,13 @@ export default function SermonArchive() {
                   {format(new Date(sermon.sermon_date), 'MMM d, yyyy')}
                 </p>
                 {(sermon.notes_url || sermon.audio_url) && (
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex gap-3 mt-3 pt-3 border-t border-primary/10">
                     {sermon.notes_url && (
                       <a
                         href={sermon.notes_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm text-primary hover:text-primary-dark font-medium transition-colors"
                       >
                         Download Notes
                       </a>
@@ -109,7 +111,7 @@ export default function SermonArchive() {
                         href={sermon.audio_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm text-primary hover:text-primary-dark font-medium transition-colors"
                       >
                         Listen
                       </a>
@@ -122,7 +124,7 @@ export default function SermonArchive() {
         })}
       </div>
       {!loading && sermons.length === 0 && (
-        <p className="text-center text-secondary-light py-12">No sermons found.</p>
+        <p className="text-center text-secondary-light py-14">No sermons found.</p>
       )}
     </div>
   )

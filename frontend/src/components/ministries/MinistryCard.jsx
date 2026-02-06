@@ -5,22 +5,22 @@ export default function MinistryCard({ ministry }) {
   return (
     <Link
       to={`/ministries/${ministry.slug}`}
-      className="block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all border border-gray-100 group"
+      className="block bg-white rounded-xl overflow-hidden border border-primary/10 hover:border-primary/30 hover:shadow-md transition-all group"
     >
-      <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent-purple/20 flex items-center justify-center">
+      <div className="aspect-video bg-gradient-to-br from-primary-50 to-cream-dark flex items-center justify-center">
         {ministry.image_url ? (
           <img
             src={ministry.image_url}
             alt={ministry.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <UserGroupIcon className="h-24 w-24 text-primary/60" />
+          <UserGroupIcon className="h-20 w-20 text-primary/30" />
         )}
       </div>
       <div className="p-6">
         <span className="text-sm font-medium text-primary">{ministry.target_audience}</span>
-        <h3 className="text-xl font-bold text-secondary-dark mt-2 group-hover:text-primary transition-colors">
+        <h3 className="text-xl font-serif font-bold text-secondary-dark mt-2 group-hover:text-primary transition-colors">
           {ministry.name}
         </h3>
         <p className="text-secondary-light mt-2 line-clamp-2">{ministry.description}</p>
