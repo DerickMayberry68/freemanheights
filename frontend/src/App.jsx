@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './lib/AuthContext'
 import { ModalProvider } from './lib/ModalContext'
@@ -43,6 +44,7 @@ function App() {
       </div>
       </ErrorBoundary>
       <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <Analytics />
       </ModalProvider>
     </AuthProvider>
   )

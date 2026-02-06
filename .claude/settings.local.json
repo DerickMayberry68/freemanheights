@@ -12,7 +12,8 @@
       "mcp__studiox-filesystem__directory_tree",
       "mcp__studiox-filesystem__read_text_file",
       "mcp__studiox-filesystem__list_directory",
-      "mcp__studiox-filesystem__write_file"
+      "mcp__studiox-filesystem__write_file",
+      "Bash(npm install:*)"
     ]
   }
 }
