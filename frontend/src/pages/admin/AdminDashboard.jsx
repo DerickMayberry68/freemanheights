@@ -1,0 +1,46 @@
+import { Routes, Route, Link } from 'react-router-dom'
+import AdminLayout from '../../components/admin/AdminLayout'
+import EventEditor from '../../components/admin/EventEditor'
+import SermonEditor from '../../components/admin/SermonEditor'
+import MinistryEditor from '../../components/admin/MinistryEditor'
+
+function AdminHome() {
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-secondary-dark mb-4">Admin Dashboard</h2>
+      <p className="text-secondary-light mb-6">
+        Welcome to the Freeman Heights admin area. Use the sidebar to manage events, sermons, and ministries.
+      </p>
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">Events</h3>
+          <p className="text-sm text-secondary-light mt-1">Manage calendar events</p>
+          <Link to="/admin/events" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Events →</Link>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">Sermons</h3>
+          <p className="text-sm text-secondary-light mt-1">Manage sermon archive</p>
+          <Link to="/admin/sermons" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Sermons →</Link>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">Ministries</h3>
+          <p className="text-sm text-secondary-light mt-1">Manage ministry info</p>
+          <Link to="/admin/ministries" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Ministries →</Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function AdminDashboard() {
+  return (
+    <AdminLayout>
+      <Routes>
+        <Route index element={<AdminHome />} />
+        <Route path="events" element={<EventEditor />} />
+        <Route path="sermons" element={<SermonEditor />} />
+        <Route path="ministries" element={<MinistryEditor />} />
+      </Routes>
+    </AdminLayout>
+  )
+}
