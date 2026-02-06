@@ -44,19 +44,21 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link to="/admin" className="text-sm font-medium text-primary hover:underline">
-              Admin
-            </Link>
             {session && (
-              <button
-                type="button"
-                onClick={() => signOut()}
-                className="text-sm font-medium text-secondary hover:text-primary transition-colors flex items-center gap-1"
-                title="Sign out"
-              >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                Sign out
-              </button>
+              <>
+                <Link to="/admin" className="text-sm font-medium text-primary hover:underline">
+                  Admin
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="text-sm font-medium text-secondary hover:text-primary transition-colors flex items-center gap-1"
+                  title="Sign out"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                  Sign out
+                </button>
+              </>
             )}
           </div>
 
@@ -96,22 +98,24 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              to="/admin"
-              className="text-base font-medium text-primary"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Admin
-            </Link>
             {session && (
-              <button
-                type="button"
-                onClick={() => { signOut(); setMobileMenuOpen(false); }}
-                className="text-base font-medium text-secondary hover:text-primary text-left flex items-center gap-2"
-              >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                Sign out
-              </button>
+              <>
+                <Link
+                  to="/admin"
+                  className="text-base font-medium text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Admin
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                  className="text-base font-medium text-secondary hover:text-primary text-left flex items-center gap-2"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                  Sign out
+                </button>
+              </>
             )}
           </div>
         </DialogPanel>

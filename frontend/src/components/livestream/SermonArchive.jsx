@@ -1,18 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { PlayIcon } from '@heroicons/react/24/solid'
-
-function getYouTubeEmbedId(url) {
-  if (!url) return null
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&\s]+)/)
-  return match ? match[1] : null
-}
+import { getYouTubeThumbnail } from '../../lib/constants'
 
 export default function SermonArchive() {
   const [sermons, setSermons] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const debounceRef = useRef(null)
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value
+    setSearch(value)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setDebouncedSearch(value), 300)
+  }
+
+  useEffect(() => {
+    return () => clearTimeout(debounceRef.current)
+  }, [])
 
   useEffect(() => {
     let query = supabase
@@ -21,15 +29,15 @@ export default function SermonArchive() {
       .order('sermon_date', { ascending: false })
       .limit(24)
 
-    if (search.trim()) {
-      query = query.or(`title.ilike.%${search}%,speaker.ilike.%${search}%,scripture_reference.ilike.%${search}%`)
+    if (debouncedSearch.trim()) {
+      query = query.or(`title.ilike.%${debouncedSearch}%,speaker.ilike.%${debouncedSearch}%,scripture_reference.ilike.%${debouncedSearch}%`)
     }
 
     query.then(({ data }) => {
       setSermons(data || [])
       setLoading(false)
     })
-  }, [search])
+  }, [debouncedSearch])
 
   return (
     <div>
@@ -38,7 +46,7 @@ export default function SermonArchive() {
           type="search"
           placeholder="Search sermons by title, speaker, or Scripture..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
         />
       </div>
@@ -51,7 +59,7 @@ export default function SermonArchive() {
           </>
         )}
         {!loading && sermons.map((sermon) => {
-          const videoId = getYouTubeEmbedId(sermon.video_url)
+          const thumbnail = getYouTubeThumbnail(sermon.video_url)
           return (
             <div
               key={sermon.id}
@@ -59,9 +67,9 @@ export default function SermonArchive() {
             >
               <a href={sermon.video_url || '#'} target="_blank" rel="noopener noreferrer" className="block group">
                 <div className="aspect-video bg-gray-900 relative">
-                  {videoId ? (
+                  {thumbnail ? (
                     <img
-                      src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                      src={thumbnail}
                       alt={sermon.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />

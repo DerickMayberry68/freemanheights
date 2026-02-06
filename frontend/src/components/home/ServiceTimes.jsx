@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useServiceTimes } from '../../lib/hooks'
 import { ClockIcon } from '@heroicons/react/24/outline'
+import { CHURCH } from '../../lib/constants'
 
 const fallbackTimes = [
   { day_of_week: 'Sunday', time: '10:30 AM', service_type: 'Sunday Morning Worship' },
@@ -44,7 +45,7 @@ export default function ServiceTimes() {
           )}
         </div>
         <p className="text-center mt-8 text-secondary-light">
-          522 Freeman Street, Berryville, AR 72616 •{' '}
+          {CHURCH.fullAddress} •{' '}
           <Link to="/explore" className="text-primary hover:underline">Get Directions</Link>
         </p>
       </div>

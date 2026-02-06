@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
 import { MapPinIcon, ClockIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
+import { CHURCH } from '../lib/constants'
 
 export default function ExplorePage() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-secondary-dark mb-2">Explore Freeman Heights</h1>
+          <h1 className="text-4xl font-bold text-secondary-dark mb-2">Explore {CHURCH.shortName}</h1>
           <p className="text-secondary-light">
             Find us, connect with us, and join us
           </p>
@@ -17,11 +18,11 @@ export default function ExplorePage() {
             <MapPinIcon className="h-12 w-12 text-primary mb-4" />
             <h3 className="text-xl font-bold text-secondary-dark mb-2">Location</h3>
             <p className="text-secondary-light mb-4">
-              522 Freeman Street<br />
-              Berryville, AR 72616
+              {CHURCH.address}<br />
+              {CHURCH.city}, {CHURCH.state} {CHURCH.zip}
             </p>
             <a
-              href="https://maps.google.com/?q=522+Freeman+Street+Berryville+AR+72616"
+              href={CHURCH.mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary font-medium hover:underline"
@@ -54,14 +55,14 @@ export default function ExplorePage() {
 
         <div className="aspect-video rounded-xl overflow-hidden shadow-lg bg-gray-200">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3185.8824454338984!2d-93.5679677!3d36.3648644!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x87cf9bc00d6e5b29%3A0x0!2s522%20Freeman%20St%2C%20Berryville%2C%20AR%2072616!5e0!3m2!1sen!2sus!4v1234567890"
+            src={CHURCH.mapsEmbedUrl}
             width="100%"
             height="100%"
             style={{ border: 0 }}
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Map of Freeman Heights Baptist Church"
+            title={`Map of ${CHURCH.name}`}
           />
         </div>
       </div>

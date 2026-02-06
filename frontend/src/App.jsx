@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './lib/AuthContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
 import HomePage from './pages/HomePage'
@@ -17,6 +18,7 @@ import ProtectedRoute from './components/admin/ProtectedRoute'
 function App() {
   return (
     <AuthProvider>
+      <ErrorBoundary>
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1">
@@ -36,6 +38,7 @@ function App() {
         </main>
         <Footer />
       </div>
+      </ErrorBoundary>
     </AuthProvider>
   )
 }

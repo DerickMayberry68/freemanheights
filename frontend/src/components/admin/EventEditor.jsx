@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -33,6 +33,7 @@ export default function EventEditor() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const modalRef = useRef(null)
 
   const loadEvents = () => {
     setLoading(true)
@@ -50,6 +51,15 @@ export default function EventEditor() {
   useEffect(() => {
     loadEvents()
   }, [])
+
+  useEffect(() => {
+    if (!formOpen) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') closeForm()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [formOpen])
 
   const openCreate = () => {
     setEditingId(null)
@@ -234,8 +244,8 @@ export default function EventEditor() {
       </div>
 
       {formOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={(e) => { if (e.target === e.currentTarget) closeForm() }}>
+          <div ref={modalRef} className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-label={editingId ? 'Edit event' : 'New event'}>
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold text-secondary-dark">
                 {editingId ? 'Edit event' : 'New event'}

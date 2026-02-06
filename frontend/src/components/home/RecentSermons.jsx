@@ -2,12 +2,7 @@ import { Link } from 'react-router-dom'
 import { useSermons } from '../../lib/hooks'
 import { format } from 'date-fns'
 import { PlayIcon } from '@heroicons/react/24/solid'
-
-function getYouTubeEmbedId(url) {
-  if (!url) return null
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&\s]+)/)
-  return match ? match[1] : null
-}
+import { getYouTubeVideoId, getYouTubeThumbnail } from '../../lib/constants'
 
 export default function RecentSermons() {
   const { data: sermons, loading } = useSermons(4)
@@ -42,7 +37,7 @@ export default function RecentSermons() {
             </div>
           )}
           {!loading && sermons.map((sermon) => {
-            const videoId = getYouTubeEmbedId(sermon.video_url)
+            const thumbnail = getYouTubeThumbnail(sermon.video_url)
             return (
               <Link
                 key={sermon.id}
@@ -50,9 +45,9 @@ export default function RecentSermons() {
                 className="block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-100 group"
               >
                 <div className="aspect-video bg-gray-900 relative">
-                  {videoId ? (
+                  {thumbnail ? (
                     <img
-                      src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                      src={thumbnail}
                       alt={sermon.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />

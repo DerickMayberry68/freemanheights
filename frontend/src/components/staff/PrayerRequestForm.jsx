@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 export default function PrayerRequestForm() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -14,15 +15,16 @@ export default function PrayerRequestForm() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    const { error } = await supabase.from('prayer_requests').insert({
+    setError(null)
+    const { error: err } = await supabase.from('prayer_requests').insert({
       name: form.name,
       email: form.email || null,
       phone: form.phone || null,
       request: form.request,
     })
     setLoading(false)
-    if (error) {
-      alert('Sorry, there was an error submitting your request. Please try again or contact the church directly.')
+    if (err) {
+      setError('Sorry, there was an error submitting your request. Please try again or contact the church directly.')
       return
     }
     setSubmitted(true)
@@ -42,6 +44,11 @@ export default function PrayerRequestForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-6 space-y-4">
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">
+          {error}
+        </div>
+      )}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-secondary-dark mb-1">
           Your Name *

@@ -3,6 +3,8 @@ import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { enUS } from 'date-fns/locale'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/AuthContext'
+import { XMarkIcon, MapPinIcon, ClockIcon } from '@heroicons/react/24/outline'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 const locales = { 'en-US': enUS }
@@ -29,6 +31,8 @@ function mapEvent(row) {
 export default function EventCalendar() {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const { approved } = useAuth()
 
   useEffect(() => {
     const start = new Date()
@@ -51,10 +55,24 @@ export default function EventCalendar() {
       })
   }, [])
 
+  useEffect(() => {
+    if (!selectedEvent) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedEvent(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedEvent])
+
+  const handleSelectEvent = (event) => {
+    setSelectedEvent(event.resource)
+  }
+
   const eventStyleGetter = () => ({
     style: {
       backgroundColor: 'var(--tw-gradient-from, #D4A84B)',
       borderRadius: '6px',
+      cursor: 'pointer',
     },
   })
 
@@ -82,6 +100,16 @@ export default function EventCalendar() {
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden p-4 md:p-6">
+      {approved && (
+        <div className="mb-4 flex justify-end">
+          <a
+            href="/admin/events"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-secondary-dark text-sm font-medium rounded-lg hover:opacity-90"
+          >
+            Manage Events
+          </a>
+        </div>
+      )}
       <div className="rbc-calendar-wrapper rbc-calendar-fh">
         <Calendar
           localizer={localizer}
@@ -95,8 +123,54 @@ export default function EventCalendar() {
           eventPropGetter={eventStyleGetter}
           messages={messages}
           className="freeman-calendar"
+          onSelectEvent={handleSelectEvent}
         />
       </div>
+
+      {selectedEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={(e) => { if (e.target === e.currentTarget) setSelectedEvent(null) }}>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full" role="dialog" aria-modal="true" aria-label="Event details">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold text-secondary-dark">{selectedEvent.title}</h3>
+              <button type="button" onClick={() => setSelectedEvent(null)} className="p-2 rounded-lg hover:bg-gray-100">
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <ClockIcon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-secondary-dark">
+                    {format(new Date(selectedEvent.event_date), 'EEEE, MMMM d, yyyy')}
+                  </p>
+                  <p className="text-sm text-secondary-light">
+                    {format(new Date(selectedEvent.event_date), 'h:mm a')}
+                    {selectedEvent.end_date && ` – ${format(new Date(selectedEvent.end_date), 'h:mm a')}`}
+                  </p>
+                </div>
+              </div>
+              {selectedEvent.location && (
+                <div className="flex items-start gap-3">
+                  <MapPinIcon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <p className="text-sm text-secondary-dark">{selectedEvent.location}</p>
+                </div>
+              )}
+              {selectedEvent.description && (
+                <p className="text-sm text-secondary-light pt-2 border-t">{selectedEvent.description}</p>
+              )}
+            </div>
+            <div className="p-4 border-t flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedEvent(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

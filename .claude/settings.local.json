@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del \"c:\\\\Users\\\\deric\\\\source\\\\repos\\\\StudioXConsulting\\\\Projects\\\\FreemanHeights\\\\frontend\\\\src\\\\components\\\\layout\\\\Navigation.jsx\")",
+      "Bash(npm run build:*)",
+      "Bash(node -e:*)",
+      "Bash(where:*)",
+      "Bash(npx sharp-cli resize:*)"
+    ]
+  }
+}
