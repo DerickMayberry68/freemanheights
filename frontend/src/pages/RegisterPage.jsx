@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
+import { supabase } from '../lib/supabase'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -26,7 +27,11 @@ export default function RegisterPage() {
     }
     setLoading(true)
     try {
-      await signUp(email, password)
+      const { user } = await signUp(email, password)
+      // Safety net: ensure approval row exists even if the DB trigger didn't fire
+      if (user?.id) {
+        await supabase.rpc('ensure_approval_exists', { p_user_id: user.id, p_email: email }).catch(() => {})
+      }
       setSuccess('Account created! Your access is pending approval from an existing admin. You can sign in to see your status.')
       setTimeout(() => navigate('/login?redirect=/admin'), 3000)
     } catch (err) {

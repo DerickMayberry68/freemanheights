@@ -16,10 +16,11 @@ export default function ApprovalsEditor() {
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) {
+          console.error('Failed to load approvals:', error.message)
           setPending([])
-          return
+        } else {
+          setPending(data || [])
         }
-        setPending(data || [])
         setLoading(false)
       })
   }, [])

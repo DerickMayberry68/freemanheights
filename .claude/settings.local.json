@@ -5,7 +5,10 @@
       "Bash(npm run build:*)",
       "Bash(node -e:*)",
       "Bash(where:*)",
-      "Bash(npx sharp-cli resize:*)"
+      "Bash(npx sharp-cli resize:*)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp remove:*)",
+      "Bash(claude mcp add-json:*)"
     ]
   }
 }
