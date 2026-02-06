@@ -8,7 +8,7 @@ export default function CalendarPage() {
           <h1 className="text-4xl font-bold text-secondary-dark mb-2">Calendar & Events</h1>
           <p className="text-secondary-light">Stay up to date with what&apos;s happening at Freeman Heights</p>
         </div>
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           <EventCalendar />
         </div>
       </div>

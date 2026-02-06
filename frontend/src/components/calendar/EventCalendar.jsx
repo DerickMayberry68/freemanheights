@@ -1,16 +1,44 @@
 import { useState, useEffect } from 'react'
+import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
+import { format, parse, startOfWeek, getDay } from 'date-fns'
+import { enUS } from 'date-fns/locale'
 import { supabase } from '../../lib/supabase'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns'
-import EventCard from './EventCard'
+import 'react-big-calendar/lib/css/react-big-calendar.css'
+
+const locales = { 'en-US': enUS }
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+})
+
+function mapEvent(row) {
+  const start = new Date(row.event_date)
+  const end = row.end_date ? new Date(row.end_date) : new Date(start.getTime() + 60 * 60 * 1000)
+  return {
+    id: row.id,
+    title: row.title,
+    start,
+    end,
+    resource: row,
+  }
+}
 
 export default function EventCalendar() {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const start = startOfMonth(currentMonth)
-    const end = endOfMonth(currentMonth)
+    const start = new Date()
+    start.setMonth(start.getMonth() - 1)
+    start.setDate(1)
+    const end = new Date()
+    end.setFullYear(end.getFullYear() + 1)
+    end.setMonth(11)
+    end.setDate(31)
+
     supabase
       .from('events')
       .select('*')
@@ -18,76 +46,56 @@ export default function EventCalendar() {
       .lte('event_date', end.toISOString())
       .order('event_date')
       .then(({ data }) => {
-        setEvents(data || [])
+        setEvents((data || []).map(mapEvent))
         setLoading(false)
       })
-  }, [currentMonth])
+  }, [])
 
-  const days = eachDayOfInterval({
-    start: startOfMonth(currentMonth),
-    end: endOfMonth(currentMonth),
+  const eventStyleGetter = () => ({
+    style: {
+      backgroundColor: 'var(--tw-gradient-from, #D4A84B)',
+      borderRadius: '6px',
+    },
   })
 
-  // Pad start of month to align first day
-  const startPadding = startOfMonth(currentMonth).getDay()
-  const paddedDays = [...Array(startPadding).fill(null), ...days]
+  const messages = {
+    today: 'Today',
+    previous: 'Back',
+    next: 'Next',
+    month: 'Month',
+    week: 'Week',
+    day: 'Day',
+    agenda: 'Agenda',
+    date: 'Date',
+    time: 'Time',
+    event: 'Event',
+    noEventsInRange: 'No events in this range.',
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-8 flex items-center justify-center min-h-[400px]">
+        <p className="text-secondary-light">Loading calendar...</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden p-6">
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-          className="p-2 rounded-lg hover:bg-gray-100 text-secondary"
-        >
-          ← Previous
-        </button>
-        <h2 className="text-xl font-bold text-secondary-dark">{format(currentMonth, 'MMMM yyyy')}</h2>
-        <button
-          onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-          className="p-2 rounded-lg hover:bg-gray-100 text-secondary"
-        >
-          Next →
-        </button>
-      </div>
-      <div className="grid grid-cols-7 gap-1 mb-4">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-          <div key={d} className="text-center text-sm font-semibold text-secondary-light py-2">
-            {d}
-          </div>
-        ))}
-        {paddedDays.map((day, i) => {
-          if (!day) return <div key={`pad-${i}`} className="aspect-square" />
-          const dayEvents = events.filter((e) => isSameDay(new Date(e.event_date), day))
-          return (
-            <div
-              key={day.toISOString()}
-              className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm ${
-                isSameMonth(day, currentMonth)
-                  ? 'bg-gray-50 text-secondary-dark'
-                  : 'text-gray-300'
-              }`}
-            >
-              <span>{format(day, 'd')}</span>
-              {dayEvents.length > 0 && (
-                <span className="text-primary font-bold text-xs">•</span>
-              )}
-            </div>
-          )
-        })}
-      </div>
-      <div className="border-t border-gray-100 pt-6">
-        <h3 className="font-semibold text-secondary-dark mb-4">Events this month</h3>
-        {loading && <p className="text-secondary-light">Loading...</p>}
-        {!loading && events.length === 0 && (
-          <p className="text-secondary-light">No events scheduled this month.</p>
-        )}
-        {!loading && events.length > 0 && (
-          <div className="space-y-4">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        )}
+    <div className="bg-white rounded-xl shadow-md overflow-hidden p-4 md:p-6">
+      <div className="rbc-calendar-wrapper rbc-calendar-fh">
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ minHeight: 500 }}
+          views={['month', 'agenda']}
+          defaultView="month"
+          popup
+          eventPropGetter={eventStyleGetter}
+          messages={messages}
+          className="freeman-calendar"
+        />
       </div>
     </div>
   )

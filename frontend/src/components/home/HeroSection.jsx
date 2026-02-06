@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom'
 export default function HeroSection() {
   return (
     <section className="relative h-[70vh] min-h-[400px] flex items-center justify-center bg-gradient-to-br from-secondary-dark via-accent-purple/30 to-primary-dark">
-      <div className="absolute inset-0 bg-[url('/church-building.jpg')] bg-cover bg-center opacity-40" />
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <h1 className="text-5xl md:text-6xl font-bold text-white drop-shadow-lg mb-4">
-          Freeman Heights Baptist Church
-        </h1>
+      {/* Church building image: add church-building.jpg to public/images/ */}
+      <div className="absolute inset-0 bg-[url('/images/church-building.jpg')] bg-cover bg-center opacity-40" />
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
+        <img
+          src="/images/logo_new.png"
+          alt="Freeman Heights Baptist Church"
+          className="h-64 md:h-96 w-auto object-contain mb-8 drop-shadow-lg"
+        />
         <p className="text-xl text-white/90 mb-8 font-serif italic">
           Growing in faith. Serving our community. Sharing Christ&apos;s love.
         </p>

@@ -7,3 +7,25 @@
 body {
   @apply font-sans text-gray-800 antialiased;
 }
+
+/* react-big-calendar overrides to match site */
+.freeman-calendar .rbc-toolbar button {
+  @apply text-secondary-dark border-secondary-light hover:bg-primary/20 hover:border-primary;
+}
+.freeman-calendar .rbc-toolbar button.rbc-active {
+  @apply bg-primary text-white border-primary;
+}
+.freeman-calendar .rbc-today {
+  @apply bg-primary/10;
+}
+.freeman-calendar .rbc-event {
+  @apply bg-primary border-primary-dark;
+}
+.freeman-calendar .rbc-header {
+  @apply text-secondary-dark border-secondary-light;
+}
+.freeman-calendar .rbc-month-view,
+.freeman-calendar .rbc-time-view,
+.freeman-calendar .rbc-agenda-view {
+  @apply border-secondary-light;
+}
