@@ -1,7 +1,17 @@
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 import LivePlayer from '../components/livestream/LivePlayer'
 import SermonArchive from '../components/livestream/SermonArchive'
 
 export default function LivestreamPage() {
+  const [livestreamUrl, setLivestreamUrl] = useState(null)
+
+  useEffect(() => {
+    supabase.from('site_settings').select('value').eq('key', 'livestream_url').maybeSingle().then(({ data }) => {
+      setLivestreamUrl(data?.value?.trim() || null)
+    })
+  }, [])
+
   return (
     <div className="py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -12,7 +22,7 @@ export default function LivestreamPage() {
 
         <div className="mb-16">
           <h2 className="text-2xl font-bold text-secondary-dark mb-6">Live Now</h2>
-          <LivePlayer />
+          <LivePlayer videoUrl={livestreamUrl} />
         </div>
 
         <div>

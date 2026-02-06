@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
+import toast from 'react-hot-toast'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 const emptySermon = {
@@ -118,9 +119,11 @@ export default function SermonEditor() {
       if (editingId) {
         const { error: err } = await supabase.from('sermons').update(payload).eq('id', editingId)
         if (err) throw err
+        toast.success('Sermon updated.')
       } else {
         const { error: err } = await supabase.from('sermons').insert(payload)
         if (err) throw err
+        toast.success('Sermon created.')
       }
       loadSermons()
       closeForm()
@@ -137,6 +140,7 @@ export default function SermonEditor() {
     try {
       const { error: err } = await supabase.from('sermons').delete().eq('id', id)
       if (err) throw err
+      toast.success('Sermon deleted.')
       loadSermons()
       setDeleteConfirm(null)
     } catch (err) {

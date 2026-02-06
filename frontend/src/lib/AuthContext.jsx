@@ -25,12 +25,31 @@ export function AuthProvider({ children }) {
     const { data: { session: s } } = await supabase.auth.getSession()
     if (!s?.user?.id) {
       setApproved(null)
+      setApprovalLoading(false)
       return
     }
     setApprovalLoading(true)
-    const { data, error } = await supabase.rpc('get_my_approval')
-    setApproved(error ? false : Boolean(data))
-    setApprovalLoading(false)
+    let done = false
+    const timeout = setTimeout(() => {
+      if (done) return
+      done = true
+      setApproved(false)
+      setApprovalLoading(false)
+    }, 8000)
+    try {
+      const { data, error } = await supabase.rpc('get_my_approval')
+      if (done) return
+      done = true
+      setApproved(error ? false : Boolean(data))
+    } catch {
+      if (!done) {
+        done = true
+        setApproved(false)
+      }
+    } finally {
+      clearTimeout(timeout)
+      setApprovalLoading(false)
+    }
   }
 
   useEffect(() => {

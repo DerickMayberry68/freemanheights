@@ -1,5 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './lib/AuthContext'
+import { ModalProvider } from './lib/ModalContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
@@ -18,6 +20,7 @@ import ProtectedRoute from './components/admin/ProtectedRoute'
 function App() {
   return (
     <AuthProvider>
+      <ModalProvider>
       <ErrorBoundary>
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -39,6 +42,8 @@ function App() {
         <Footer />
       </div>
       </ErrorBoundary>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      </ModalProvider>
     </AuthProvider>
   )
 }

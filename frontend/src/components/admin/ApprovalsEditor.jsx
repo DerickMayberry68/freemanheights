@@ -1,41 +1,58 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
+import toast from 'react-hot-toast'
 import { useAuth } from '../../lib/AuthContext'
+import { useModal } from '../../lib/ModalContext'
 
 export default function ApprovalsEditor() {
   const [pending, setPending] = useState([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(null)
   const { refreshApproval } = useAuth()
+  const { showError, showConfirm } = useModal()
 
-  useEffect(() => {
+  const loadApprovals = () => {
+    setLoading(true)
     supabase
-      .from('admin_approvals')
-      .select('id, user_id, email, approved, created_at')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Failed to load approvals:', error.message)
+      .rpc('get_admin_approvals')
+      .then(({ data, error: e }) => {
+        if (e) {
+          console.error('Failed to load approvals:', e.message)
+          showError('Failed to load approvals', e.message)
           setPending([])
         } else {
           setPending(data || [])
         }
         setLoading(false)
       })
+  }
+
+  useEffect(() => {
+    loadApprovals()
   }, [])
 
-  const handleApprove = async (id) => {
+  const runApprove = async (id) => {
     setActionLoading(id)
-    const { error } = await supabase
-      .from('admin_approvals')
-      .update({ approved: true, approved_at: new Date().toISOString(), approved_by: (await supabase.auth.getUser()).data?.user?.id })
-      .eq('id', id)
+    const { error: err } = await supabase.rpc('approve_admin_user', { p_approval_id: id })
     setActionLoading(null)
-    if (!error) {
-      setPending((prev) => prev.map((r) => (r.id === id ? { ...r, approved: true } : r)))
-      refreshApproval?.()
+    if (err) {
+      showError('Failed to approve', err.message || 'Could not approve user.')
+      return
     }
+    toast.success('User approved.')
+    loadApprovals()
+    refreshApproval?.()
+  }
+
+  const handleApprove = (row) => {
+    showConfirm({
+      title: 'Approve user',
+      message: `Allow ${row.email} to access the admin area?`,
+      confirmLabel: 'Approve',
+      cancelLabel: 'Cancel',
+      onConfirm: () => runApprove(row.id),
+    })
   }
 
   const pendingList = pending.filter((r) => !r.approved)
@@ -66,7 +83,7 @@ export default function ApprovalsEditor() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleApprove(row.id)}
+                  onClick={() => handleApprove(row)}
                   disabled={actionLoading === row.id}
                   className="px-4 py-2 bg-primary hover:bg-primary-dark text-secondary-dark font-medium rounded-lg disabled:opacity-50"
                 >

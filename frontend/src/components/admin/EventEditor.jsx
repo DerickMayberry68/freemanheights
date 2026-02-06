@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
+import toast from 'react-hot-toast'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 function toDatetimeLocal(iso) {
@@ -120,9 +121,11 @@ export default function EventEditor() {
       if (editingId) {
         const { error: err } = await supabase.from('events').update(payload).eq('id', editingId)
         if (err) throw err
+        toast.success('Event updated.')
       } else {
         const { error: err } = await supabase.from('events').insert(payload)
         if (err) throw err
+        toast.success('Event created.')
       }
       loadEvents()
       closeForm()
@@ -139,6 +142,7 @@ export default function EventEditor() {
     try {
       const { error: err } = await supabase.from('events').delete().eq('id', id)
       if (err) throw err
+      toast.success('Event deleted.')
       loadEvents()
       setDeleteConfirm(null)
     } catch (err) {

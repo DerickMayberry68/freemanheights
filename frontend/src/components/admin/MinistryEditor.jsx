@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
+import toast from 'react-hot-toast'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 const emptyMinistry = {
@@ -123,9 +124,11 @@ export default function MinistryEditor() {
       if (editingId) {
         const { error: err } = await supabase.from('ministries').update(payload).eq('id', editingId)
         if (err) throw err
+        toast.success('Ministry updated.')
       } else {
         const { error: err } = await supabase.from('ministries').insert(payload)
         if (err) throw err
+        toast.success('Ministry created.')
       }
       loadMinistries()
       closeForm()
@@ -142,6 +145,7 @@ export default function MinistryEditor() {
     try {
       const { error: err } = await supabase.from('ministries').delete().eq('id', id)
       if (err) throw err
+      toast.success('Ministry deleted.')
       loadMinistries()
       setDeleteConfirm(null)
     } catch (err) {
