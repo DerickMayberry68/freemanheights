@@ -4,6 +4,7 @@ import EventEditor from '../../components/admin/EventEditor'
 import SermonEditor from '../../components/admin/SermonEditor'
 import MinistryEditor from '../../components/admin/MinistryEditor'
 import ApprovalsEditor from '../../components/admin/ApprovalsEditor'
+import RecordLivestream from '../../components/admin/RecordLivestream'
 
 function AdminHome() {
   return (
@@ -29,6 +30,11 @@ function AdminHome() {
           <Link to="/admin/sermons" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Sermons →</Link>
         </div>
         <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">Record Livestream</h3>
+          <p className="text-sm text-secondary-light mt-1">Record with camera and save to the database</p>
+          <Link to="/admin/record" className="text-primary font-medium mt-2 inline-block hover:underline">Record →</Link>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
           <h3 className="font-semibold text-secondary-dark">Ministries</h3>
           <p className="text-sm text-secondary-light mt-1">Manage ministry info</p>
           <Link to="/admin/ministries" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Ministries →</Link>
@@ -47,6 +53,7 @@ export default function AdminDashboard() {
         <Route path="events" element={<EventEditor />} />
         <Route path="sermons" element={<SermonEditor />} />
         <Route path="ministries" element={<MinistryEditor />} />
+        <Route path="record" element={<RecordLivestream />} />
       </Routes>
     </AdminLayout>
   )

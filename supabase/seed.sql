@@ -22,23 +22,23 @@ INSERT INTO staff (name, role, bio, email, display_order) VALUES
 ('Sarah Johnson', 'Children''s Director', 'Leads our kids ministry and AWANA program with creativity and heart.', 'sarah@freemanheights.com', 3),
 ('Jennifer Williams', 'Worship Leader', 'Leads our worship team and coordinates music for Sunday services.', 'jennifer@freemanheights.com', 4);
 
--- Events
+-- Events (Sunday Worship = next Sunday 10:30 AM)
 INSERT INTO events (title, description, event_date, location, is_featured) VALUES
-('Sunday Worship', 'Join us for worship this Sunday', NOW() + INTERVAL '1 day', '522 Freeman Street, Berryville, AR', true),
+('Sunday Worship', 'Join us for worship this Sunday', (CURRENT_DATE + (CASE WHEN EXTRACT(DOW FROM CURRENT_DATE) = 0 THEN 7 ELSE (7 - EXTRACT(DOW FROM CURRENT_DATE)::int) END) * INTERVAL '1 day') + INTERVAL '10 hours 30 minutes', '522 Freeman Street, Berryville, AR', true),
 ('Wednesday Bible Study', 'Midweek prayer and Bible study', NOW() + INTERVAL '3 days', '522 Freeman Street, Berryville, AR', false),
 ('Youth Lock-In', 'All-night event for students! Games, worship, and fellowship.', NOW() + INTERVAL '7 days', '522 Freeman Street, Berryville, AR', true),
 ('Community Outreach Day', 'Serve our community together. Sign up at the welcome desk.', NOW() + INTERVAL '14 days', 'Downtown Berryville', true),
 ('AWANA Awards Night', 'Celebrating another year of Scripture memory', NOW() + INTERVAL '21 days', '522 Freeman Street, Berryville, AR', false),
 ('Easter Sunday Service', 'Celebrate the resurrection with us! Special music and breakfast.', NOW() + INTERVAL '60 days', '522 Freeman Street, Berryville, AR', true);
 
--- Sermons
+-- Sermons (video_url: add real YouTube links in Admin → Sermons when available)
 INSERT INTO sermons (title, speaker, sermon_date, scripture_reference, description, video_url, is_featured) VALUES
-('Welcome to Freeman Heights', 'Pastor', CURRENT_DATE - INTERVAL '7 days', 'Matthew 28:19-20', 'Introduction to our church family and mission.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', true),
-('Walking in Faith', 'Pastor', CURRENT_DATE - INTERVAL '14 days', 'Hebrews 11:1-6', 'What it means to live by faith in uncertain times.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', true),
-('The Good Shepherd', 'Pastor', CURRENT_DATE - INTERVAL '21 days', 'John 10:1-18', 'Jesus as our shepherd who knows and cares for His sheep.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', false),
-('Love One Another', 'Mike Thompson', CURRENT_DATE - INTERVAL '28 days', '1 John 4:7-12', 'Building authentic community in the body of Christ.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', false),
-('Prayer That Moves Mountains', 'Pastor', CURRENT_DATE - INTERVAL '35 days', 'Matthew 17:20-21', 'The power of persistent prayer.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', false),
-('Grace and Truth', 'Pastor', CURRENT_DATE - INTERVAL '42 days', 'John 1:14-18', 'Living in the balance of grace and truth.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', false);
+('Welcome to Freeman Heights', 'Pastor', CURRENT_DATE - INTERVAL '7 days', 'Matthew 28:19-20', 'Introduction to our church family and mission.', NULL, true),
+('Walking in Faith', 'Pastor', CURRENT_DATE - INTERVAL '14 days', 'Hebrews 11:1-6', 'What it means to live by faith in uncertain times.', NULL, true),
+('The Good Shepherd', 'Pastor', CURRENT_DATE - INTERVAL '21 days', 'John 10:1-18', 'Jesus as our shepherd who knows and cares for His sheep.', NULL, false),
+('Love One Another', 'Mike Thompson', CURRENT_DATE - INTERVAL '28 days', '1 John 4:7-12', 'Building authentic community in the body of Christ.', NULL, false),
+('Prayer That Moves Mountains', 'Pastor', CURRENT_DATE - INTERVAL '35 days', 'Matthew 17:20-21', 'The power of persistent prayer.', NULL, false),
+('Grace and Truth', 'Pastor', CURRENT_DATE - INTERVAL '42 days', 'John 1:14-18', 'Living in the balance of grace and truth.', NULL, false);
 
 -- Announcements
 INSERT INTO announcements (title, content, start_date, end_date, priority) VALUES

@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 
 export default function HeroSection() {
   return (
-    <section className="relative h-[70vh] min-h-[400px] flex items-center justify-center bg-gradient-to-br from-secondary-dark via-accent-purple/30 to-primary-dark">
-      {/* Church building image: add church-building.jpg to public/images/ */}
-      <div className="absolute inset-0 bg-[url('/images/church-building.jpg')] bg-cover bg-center opacity-40" />
+    <section className="relative h-[70vh] min-h-[400px] flex items-center justify-center bg-secondary-dark">
+      <div className="absolute inset-0 bg-[url('/images/holysunrise2.jpg')] bg-cover bg-center bg-no-repeat" />
+      <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
         <img
           src="/images/logo_new.png"

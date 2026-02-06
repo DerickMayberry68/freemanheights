@@ -1,13 +1,22 @@
-const DEFAULT_LIVESTREAM_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-
 function getYouTubeEmbedUrl(url) {
   if (!url) return null
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&\s]+)/)
   return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : null
 }
 
-export default function LivePlayer({ videoUrl = DEFAULT_LIVESTREAM_URL }) {
-  const embedUrl = getYouTubeEmbedUrl(videoUrl) || getYouTubeEmbedUrl(DEFAULT_LIVESTREAM_URL)
+export default function LivePlayer({ videoUrl }) {
+  const embedUrl = getYouTubeEmbedUrl(videoUrl)
+
+  if (!embedUrl) {
+    return (
+      <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden shadow-xl bg-secondary-dark/90 flex items-center justify-center text-white">
+        <div className="text-center px-6">
+          <p className="text-xl font-medium mb-2">Livestream not currently active</p>
+          <p className="text-white/80">Join us in person at 522 Freeman Street, Berryville, AR — or check back during service times for the live stream.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="aspect-video w-full max-w-5xl mx-auto rounded-xl overflow-hidden shadow-xl bg-black">
