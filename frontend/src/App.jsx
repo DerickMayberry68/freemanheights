@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './lib/AuthContext'
 import { ModalProvider } from './lib/ModalContext'
 import ErrorBoundary from './components/ErrorBoundary'
+import ScrollToTop from './components/ScrollToTop'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
 import HomePage from './pages/HomePage'
@@ -24,6 +25,7 @@ function App() {
       <ModalProvider>
       <ErrorBoundary>
       <div className="min-h-screen flex flex-col">
+        <ScrollToTop />
         <Header />
         <main className="flex-1">
           <Routes>
