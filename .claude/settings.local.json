@@ -24,7 +24,8 @@
       "Bash(cmd /c \"taskkill /PID 66360 /F\")",
       "Bash(powershell -Command:*)",
       "Bash(npm run dev:*)",
-      "Bash(timeout 5 tail:*)"
+      "Bash(timeout 5 tail:*)",
+      "Bash(tasklist:*)"
     ]
   }
 }

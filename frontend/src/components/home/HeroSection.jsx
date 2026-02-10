@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import WordMontage from './WordMontage'
 
 const HERO_SLIDES = [
   {
@@ -57,6 +58,10 @@ export default function HeroSection() {
           )}
         </div>
       ))}
+
+      {/* Word Montage */}
+      <WordMontage />
+
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
         <img
           src="/images/redLogo.png"

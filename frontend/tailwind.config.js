@@ -31,6 +31,18 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         serif: ['Lora', 'Georgia', 'serif'],
       },
+      keyframes: {
+        'word-flicker': {
+          '0%': { opacity: '0' },
+          '15%': { opacity: '0.3' },
+          '35%': { opacity: '0.3' },
+          '50%': { opacity: '0' },
+          '100%': { opacity: '0' },
+        },
+      },
+      animation: {
+        'word-flicker': 'word-flicker 4s ease-in-out infinite',
+      },
     },
   },
   plugins: [],
