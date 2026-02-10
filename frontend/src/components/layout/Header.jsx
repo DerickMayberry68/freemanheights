@@ -26,7 +26,7 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img
-              src="/images/cross_swosh.png"
+              src="/images/redCross.png"
               alt=""
               className="h-11 w-auto object-contain"
               onError={(e) => { e.target.style.display = 'none' }}

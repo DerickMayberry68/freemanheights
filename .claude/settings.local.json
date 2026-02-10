@@ -15,7 +15,8 @@
       "mcp__studiox-filesystem__write_file",
       "Bash(npm install:*)",
       "Bash(ls:*)",
-      "Bash(supabase db push:*)"
+      "Bash(supabase db push:*)",
+      "WebFetch(domain:www.freemanheights.com)"
     ]
   }
 }

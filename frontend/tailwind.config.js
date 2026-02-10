@@ -8,23 +8,23 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#D4A84B',
-          dark: '#B8923F',
-          light: '#E5C46A',
-          50: '#FDF8ED',
+          DEFAULT: '#1E3A8A', // Navy blue from church sign
+          dark: '#1E293B',
+          light: '#3B82F6',
+          50: '#EFF6FF',
         },
         secondary: {
-          DEFAULT: '#6B5340',
-          dark: '#4A3520',
-          light: '#8C7A6B',
+          DEFAULT: '#64748B',
+          dark: '#334155',
+          light: '#94A3B8',
         },
         accent: {
-          DEFAULT: '#8B6D3F',
-          warm: '#C4956A',
+          DEFAULT: '#F59E0B',
+          warm: '#FBBF24',
         },
         cream: {
-          DEFAULT: '#FFFBF0',
-          dark: '#FDF3E0',
+          DEFAULT: '#F8FAFC',
+          dark: '#F1F5F9',
         },
       },
       fontFamily: {
