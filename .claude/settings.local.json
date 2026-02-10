@@ -16,7 +16,15 @@
       "Bash(npm install:*)",
       "Bash(ls:*)",
       "Bash(supabase db push:*)",
-      "WebFetch(domain:www.freemanheights.com)"
+      "WebFetch(domain:www.freemanheights.com)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd //c \"taskkill //PID 66360 //F\")",
+      "Bash(cmd /c \"taskkill /PID 66360 /F\")",
+      "Bash(powershell -Command:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout 5 tail:*)"
     ]
   }
 }
