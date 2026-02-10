@@ -13,10 +13,8 @@ const WORDS = [
   'blameless',
   'made pure',
   'peace with God',
-  'bestowed',
   'elected',
   'made righteous',
-  'gift',
   'blood bought',
   'justified',
   'beloved',
@@ -27,7 +25,9 @@ const WORDS = [
   'hope',
   'love',
   'blessed',
-  'YHWH'
+  'YHWH',
+  'God Is Alive',
+  'Alive in Christ'
 ]
 
 const WordMontage = () => {

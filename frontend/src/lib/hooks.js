@@ -86,3 +86,20 @@ export function useStaff() {
   }, [])
   return { data, loading }
 }
+
+export function useBibleVerses() {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    supabase
+      .from('bible_verses')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order')
+      .then(({ data: d }) => {
+        setData(d || [])
+        setLoading(false)
+      })
+  }, [])
+  return { data, loading }
+}

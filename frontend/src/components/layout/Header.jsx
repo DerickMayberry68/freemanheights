@@ -22,7 +22,7 @@ export default function Header() {
   return (
     <header className="bg-white/95 backdrop-blur-sm sticky top-0 z-50 border-b border-primary/10">
       <div className="h-1 bg-gradient-to-r from-primary-dark via-primary to-primary-light" />
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <nav className="w-full px-8">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img

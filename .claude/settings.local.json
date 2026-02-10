@@ -25,7 +25,8 @@
       "Bash(powershell -Command:*)",
       "Bash(npm run dev:*)",
       "Bash(timeout 5 tail:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(timeout:*)"
     ]
   }
 }

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import WordMontage from './WordMontage'
+import BibleVerseDisplay from './BibleVerseDisplay'
 
 export default function HeroSection() {
   return (
@@ -18,6 +19,9 @@ export default function HeroSection() {
 
       {/* Word Montage */}
       <WordMontage />
+
+      {/* Bible Verse Display */}
+      <BibleVerseDisplay />
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
         <img
