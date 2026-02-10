@@ -167,7 +167,7 @@ export default function MinistryEditor() {
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-secondary-dark font-medium rounded-lg hover:opacity-90"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90"
         >
           <PlusIcon className="h-5 w-5" />
           Add ministry
@@ -374,7 +374,7 @@ export default function MinistryEditor() {
                 <button type="button" onClick={closeForm} className="px-4 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50">
                   Cancel
                 </button>
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-secondary-dark font-medium rounded-lg hover:opacity-90 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50">
                   {saving ? 'Saving…' : editingId ? 'Update' : 'Create'}
                 </button>
               </div>

@@ -25,7 +25,7 @@ export default class ErrorBoundary extends Component {
                 this.setState({ hasError: false })
                 window.location.reload()
               }}
-              className="px-6 py-3 bg-primary text-secondary-dark font-semibold rounded-lg hover:opacity-90"
+              className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:opacity-90"
             >
               Refresh Page
             </button>

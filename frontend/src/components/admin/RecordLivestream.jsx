@@ -202,7 +202,7 @@ export default function RecordLivestream() {
             type="button"
             onClick={saveLivestreamUrl}
             disabled={livestreamUrlSaving}
-            className="px-4 py-2 bg-primary text-secondary-dark font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
+            className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
           >
             {livestreamUrlSaving ? 'Saving…' : 'Save URL'}
           </button>
@@ -232,7 +232,7 @@ export default function RecordLivestream() {
                 <button
                   type="button"
                   onClick={startRecording}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-secondary-dark font-medium rounded-lg hover:opacity-90"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90"
                 >
                   <VideoCameraIcon className="h-5 w-5" />
                   Start recording
@@ -282,7 +282,7 @@ export default function RecordLivestream() {
                   type="button"
                   onClick={saveRecording}
                   disabled={saving}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-secondary-dark font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
                 >
                   <ArrowUpTrayIcon className="h-5 w-5" />
                   {saving ? 'Saving…' : 'Save to database'}

@@ -69,13 +69,13 @@ export default function HeroSection() {
         <div className="flex flex-wrap justify-center gap-4">
           <Link
             to="/livestream"
-            className="px-8 py-4 bg-primary hover:bg-primary-light text-secondary-dark font-semibold rounded-lg shadow-lg transition-colors"
+            className="px-8 py-4 bg-primary hover:bg-primary-light text-white font-semibold rounded-lg shadow-lg transition-colors"
           >
             Watch Livestream
           </Link>
           <Link
             to="/give"
-            className="px-8 py-4 bg-white/90 hover:bg-white text-secondary-dark font-semibold rounded-lg shadow-lg transition-colors"
+            className="px-8 py-4 bg-white/90 hover:bg-white text-primary hover:text-primary-dark font-semibold rounded-lg shadow-lg transition-colors"
           >
             Give Online
           </Link>
