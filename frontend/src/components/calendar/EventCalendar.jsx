@@ -100,9 +100,9 @@ export default function EventCalendar() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-primary/10 overflow-hidden p-4 md:p-6">
+    <div className="bg-white rounded-xl border border-primary/10 overflow-hidden p-4 md:p-8">
       {approved && (
-        <div className="mb-4 flex justify-end">
+        <div className="mb-6 flex justify-end">
           <a
             href="/admin/events"
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
@@ -117,7 +117,7 @@ export default function EventCalendar() {
           events={events}
           startAccessor="start"
           endAccessor="end"
-          style={{ minHeight: 500 }}
+          style={{ minHeight: 900, height: '80vh' }}
           views={['month', 'agenda']}
           defaultView="month"
           popup
@@ -160,7 +160,15 @@ export default function EventCalendar() {
                 <p className="text-sm text-secondary-light pt-2 border-t border-primary/10">{selectedEvent.description}</p>
               )}
             </div>
-            <div className="p-5 border-t border-primary/10 flex justify-end">
+            <div className="p-5 border-t border-primary/10 flex justify-end gap-2">
+              {approved && (
+                <a
+                  href={`/admin/events?edit=${selectedEvent.id}`}
+                  className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark text-sm transition-colors"
+                >
+                  Edit Event
+                </a>
+              )}
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}

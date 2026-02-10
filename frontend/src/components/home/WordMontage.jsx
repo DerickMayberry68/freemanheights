@@ -27,13 +27,17 @@ const WORDS = [
   'hope',
   'love',
   'blessed',
+  'YHWH'
 ]
 
 const WordMontage = () => {
   // Generate random positions and styles for each word
   const wordStyles = useMemo(() => {
     return WORDS.map((word, index) => {
-      const fontSize = Math.random() * 2 + 1.5 // 1.5rem to 3.5rem
+      const isSpecial = ['faith', 'hope', 'love'].includes(word.toLowerCase())
+      const fontSize = isSpecial
+        ? Math.random() * 2 + 4 // 4rem to 6rem for faith, hope, love
+        : Math.random() * 2 + 1.5 // 1.5rem to 3.5rem for others
 
       // Position words everywhere except center (avoid logo area)
       let top, left
@@ -51,6 +55,7 @@ const WordMontage = () => {
 
       return {
         word,
+        isSpecial,
         style: {
           fontSize: `${fontSize}rem`,
           top: `${top}%`,
@@ -58,6 +63,7 @@ const WordMontage = () => {
           transform: `rotate(${rotation}deg)`,
           opacity: 0,
           animation: `word-flicker ${duration}s ease-in-out ${delay}s infinite`,
+          color: isSpecial ? '#991B1B' : undefined, // Red for faith, hope, love
         },
       }
     })
@@ -65,10 +71,12 @@ const WordMontage = () => {
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {wordStyles.map(({ word, style }, index) => (
+      {wordStyles.map(({ word, isSpecial, style }, index) => (
         <div
           key={`${word}-${index}`}
-          className="absolute font-serif font-bold text-white select-none"
+          className={`absolute font-serif font-bold select-none ${
+            isSpecial ? 'text-primary' : 'text-white'
+          }`}
           style={style}
         >
           {word}

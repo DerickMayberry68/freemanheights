@@ -18,7 +18,7 @@ WHERE name ILIKE '%adult%';
 
 -- Update Awanas Ministry
 UPDATE ministries
-SET image_url = '/images/OIP.jpeg'
+SET image_url = '/images/awana.jpg'
 WHERE name ILIKE '%awana%';
 
 -- Update Women's Ministry

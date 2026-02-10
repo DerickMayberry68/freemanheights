@@ -9,8 +9,8 @@ export default function CalendarPage() {
           <p>Stay up to date with what&apos;s happening at Freeman Heights</p>
         </div>
       </div>
-      <div className="py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="py-8">
+        <div className="mx-auto max-w-[90vw] px-4 sm:px-6 lg:px-8">
           <EventCalendar />
         </div>
       </div>
