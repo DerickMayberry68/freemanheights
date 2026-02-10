@@ -1,53 +1,20 @@
 import { Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
 import WordMontage from './WordMontage'
 
-const HERO_SLIDES = [
-  {
-    type: 'image',
-    image: '/images/parchmentBG.jpg',
-    overlay: 'rgba(0, 0, 0, 0.3)',
-  },
-]
-
 export default function HeroSection() {
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setCurrentSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length)
-        setIsTransitioning(false)
-      }, 500)
-    }, 20000)
-
-    return () => clearInterval(interval)
-  }, [])
-
   return (
     <section className="relative h-[70vh] min-h-[400px] flex items-center justify-center bg-primary-dark overflow-hidden">
-      {/* Carousel backgrounds */}
-      {HERO_SLIDES.map((slide, index) => (
+      {/* Background */}
+      <div className="absolute inset-0">
         <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentSlideIndex && !isTransitioning ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url('${slide.image}')` }}
-          />
-          {slide.overlay && (
-            <div
-              className="absolute inset-0"
-              style={{ backgroundColor: slide.overlay }}
-            />
-          )}
-        </div>
-      ))}
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/parchmentBG.jpg')" }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+        />
+      </div>
 
       {/* Word Montage */}
       <WordMontage />

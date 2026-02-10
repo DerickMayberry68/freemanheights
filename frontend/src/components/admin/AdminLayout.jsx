@@ -10,6 +10,7 @@ const adminNav = [
   { to: '/admin/sermons', label: 'Sermons' },
   { to: '/admin/record', label: 'Record Livestream' },
   { to: '/admin/ministries', label: 'Ministries' },
+  { to: '/admin/staff', label: 'Staff' },
 ]
 
 export default function AdminLayout({ children }) {
