@@ -5,16 +5,6 @@ import WordMontage from './WordMontage'
 const HERO_SLIDES = [
   {
     type: 'image',
-    image: '/images/linen1BG.jpeg',
-    overlay: 'rgba(0, 0, 0, 0.3)',
-  },
-  {
-    type: 'image',
-    image: '/images/linen2BG.jpeg',
-    overlay: 'rgba(0, 0, 0, 0.3)',
-  },
-  {
-    type: 'image',
     image: '/images/parchmentBG.jpg',
     overlay: 'rgba(0, 0, 0, 0.3)',
   },

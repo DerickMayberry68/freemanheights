@@ -56,6 +56,7 @@ const WordMontage = () => {
           top: `${top}%`,
           left: `${left}%`,
           transform: `rotate(${rotation}deg)`,
+          opacity: 0,
           animation: `word-flicker ${duration}s ease-in-out ${delay}s infinite`,
         },
       }
