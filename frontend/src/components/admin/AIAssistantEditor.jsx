@@ -4,6 +4,8 @@ import { PencilIcon, TrashIcon, XMarkIcon, BookmarkIcon, SparklesIcon } from '@h
 import { callClaudeAssistant, saveFavorite, getFavorites, updateFavorite, deleteFavorite } from '../../lib/claudeApi'
 import { useBibleTranslations } from '../../lib/hooks'
 import { fetchBibleVerse, parseBibleReference } from '../../lib/bibleApi'
+import { useAuth } from '../../lib/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 const TABS = [
   { id: 'bible_search', label: 'Bible Search', icon: SparklesIcon },
@@ -23,6 +25,7 @@ const PLACEHOLDERS = {
 }
 
 export default function AIAssistantEditor() {
+  const { user } = useAuth()
   const { data: translations, loading: translationsLoading } = useBibleTranslations()
   const [activeTab, setActiveTab] = useState('bible_search')
   const [query, setQuery] = useState('')
@@ -46,6 +49,30 @@ export default function AIAssistantEditor() {
   // Translation Comparison
   const [selectedTranslations, setSelectedTranslations] = useState(['ESV', 'NIV', 'KJV', 'NLT'])
   const [comparisonResults, setComparisonResults] = useState([])
+
+  // Load user's preferred Bible translation on mount
+  useEffect(() => {
+    if (!user) return
+
+    const loadUserPreference = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('preferred_bible_translation')
+          .eq('user_id', user.id)
+          .single()
+
+        if (data && data.preferred_bible_translation) {
+          setTranslation(data.preferred_bible_translation)
+        }
+      } catch (err) {
+        // If no preference exists, keep default ESV
+        console.log('No user preference found, using default')
+      }
+    }
+
+    loadUserPreference()
+  }, [user])
 
   // Load favorites when switching to Saved tab
   useEffect(() => {
