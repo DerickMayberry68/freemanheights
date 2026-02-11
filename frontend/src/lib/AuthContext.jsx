@@ -8,18 +8,25 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [approved, setApproved] = useState(null)
   const [approvalLoading, setApprovalLoading] = useState(false)
+  const [userPreferences, setUserPreferences] = useState(null)
+  const [preferencesLoading, setPreferencesLoading] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s)
       setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setApproved(null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      const userChanged = session?.user?.id !== newSession?.user?.id
+      setSession(newSession)
+      // Only reset approval if user actually changed (logged out/in), not on token refresh
+      if (userChanged) {
+        setApproved(null)
+        setUserPreferences(null)
+      }
     })
     return () => subscription?.unsubscribe()
-  }, [])
+  }, [session?.user?.id])
 
   const fetchApproval = async () => {
     const { data: { session: s } } = await supabase.auth.getSession()
@@ -77,18 +84,63 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
   }
 
+  const fetchUserPreferences = async () => {
+    const { data: { session: s } } = await supabase.auth.getSession()
+    if (!s?.user?.id) {
+      setUserPreferences(null)
+      setPreferencesLoading(false)
+      return
+    }
+    setPreferencesLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', s.user.id)
+        .single()
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+        console.error('Error fetching user preferences:', error)
+        setUserPreferences({ preferred_bible_translation: 'KJV' })
+      } else if (data) {
+        setUserPreferences(data)
+      } else {
+        // No preferences found, use defaults
+        setUserPreferences({ preferred_bible_translation: 'KJV' })
+      }
+    } catch (err) {
+      console.error('Error fetching user preferences:', err)
+      setUserPreferences({ preferred_bible_translation: 'KJV' })
+    } finally {
+      setPreferencesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setUserPreferences(null)
+      return
+    }
+    const t = setTimeout(() => fetchUserPreferences(), 100)
+    return () => clearTimeout(t)
+  }, [session?.user?.id])
+
   const refreshApproval = () => fetchApproval()
+  const refreshUserPreferences = () => fetchUserPreferences()
 
   const value = {
     session,
     loading,
     approved, // true | false | null (null = not yet checked)
     approvalLoading,
+    userPreferences,
+    preferencesLoading,
     signIn,
     signUp,
     signOut,
     user: session?.user,
     refreshApproval,
+    refreshUserPreferences,
   }
 
   return (

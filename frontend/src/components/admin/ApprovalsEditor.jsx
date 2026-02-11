@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
-import toast from 'react-hot-toast'
+import { toast } from 'react-toastify'
 import { useAuth } from '../../lib/AuthContext'
 import { useModal } from '../../lib/ModalContext'
+import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table'
 
 const ROLES = [
   { value: 'admin', label: 'Admin', description: 'Full access to all features' },
@@ -16,6 +17,7 @@ export default function ApprovalsEditor() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(null)
   const [selectedRole, setSelectedRole] = useState({}) // Track role selection per user
+  const [sorting, setSorting] = useState([])
   const { refreshApproval } = useAuth()
   const { showError, showConfirm } = useModal()
 
@@ -74,6 +76,40 @@ export default function ApprovalsEditor() {
 
   const pendingList = pending.filter((r) => !r.approved)
   const approvedList = pending.filter((r) => r.approved)
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'email',
+        header: 'Email',
+        cell: info => <span className="font-medium text-secondary-dark">{info.getValue()}</span>
+      },
+      {
+        accessorKey: 'approved_at',
+        header: 'Approved Date',
+        cell: info => info.getValue() ? format(new Date(info.getValue()), 'MMM d, yyyy') : '—'
+      },
+      {
+        accessorKey: 'role',
+        header: 'Role',
+        cell: info => (
+          <span className="px-3 py-1 bg-primary-50 text-primary text-xs font-medium rounded-full border border-primary/20">
+            {info.getValue() ? info.getValue().charAt(0).toUpperCase() + info.getValue().slice(1) : 'Editor'}
+          </span>
+        )
+      }
+    ],
+    []
+  )
+
+  const table = useReactTable({
+    data: approvedList,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
 
   if (loading) return <p className="text-secondary-light">Loading...</p>
 
@@ -139,27 +175,48 @@ export default function ApprovalsEditor() {
         <h3 className="px-6 py-3 bg-cream-dark font-semibold text-secondary-dark border-b border-primary/10">
           Approved users ({approvedList.length})
         </h3>
-        <ul className="divide-y divide-primary/10">
-          {approvedList.length === 0 ? (
-            <li className="px-6 py-4 text-secondary-light text-sm">None yet.</li>
-          ) : (
-            approvedList.map((row) => (
-              <li key={row.id} className="px-6 py-3 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-secondary-dark">{row.email}</p>
-                  {row.approved_at && (
-                    <p className="text-xs text-secondary-light">
-                      Approved {format(new Date(row.approved_at), 'MMM d, yyyy')}
-                    </p>
-                  )}
-                </div>
-                <span className="px-3 py-1 bg-primary-50 text-primary text-xs font-medium rounded-full border border-primary/20">
-                  {row.role ? row.role.charAt(0).toUpperCase() + row.role.slice(1) : 'Editor'}
-                </span>
-              </li>
-            ))
-          )}
-        </ul>
+        {approvedList.length === 0 ? (
+          <div className="px-6 py-4 text-secondary-light text-sm">None yet.</div>
+        ) : (
+          <table className="min-w-full divide-y divide-primary/10">
+            <thead className="bg-cream">
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <th
+                      key={header.id}
+                      className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase cursor-pointer select-none hover:bg-cream-dark"
+                      onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                      style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanSort() && (
+                          <span className="text-gray-400">
+                            {header.column.getIsSorted() === 'asc' && '↑'}
+                            {header.column.getIsSorted() === 'desc' && '↓'}
+                            {!header.column.getIsSorted() && '↕'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="divide-y divide-primary/10">
+              {table.getRowModel().rows.map((row, idx) => (
+                <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="px-6 py-3 text-sm text-secondary-light">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )

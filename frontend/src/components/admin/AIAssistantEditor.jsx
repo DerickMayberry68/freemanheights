@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
-import toast from 'react-hot-toast'
+import { toast } from 'react-toastify'
 import { PencilIcon, TrashIcon, XMarkIcon, BookmarkIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { callClaudeAssistant, saveFavorite, getFavorites, updateFavorite, deleteFavorite } from '../../lib/claudeApi'
+import { useBibleTranslations } from '../../lib/hooks'
+import { fetchBibleVerse, parseBibleReference } from '../../lib/bibleApi'
 
 const TABS = [
   { id: 'bible_search', label: 'Bible Search', icon: SparklesIcon },
   { id: 'cross_reference', label: 'Cross-References', icon: BookmarkIcon },
   { id: 'verse_context', label: 'Verse Context', icon: BookmarkIcon },
+  { id: 'compare_translations', label: 'Compare Translations', icon: BookmarkIcon },
   { id: 'sermon_ideas', label: 'Sermon Ideas', icon: SparklesIcon },
   { id: 'saved', label: 'Saved', icon: BookmarkIcon }
 ]
@@ -15,38 +18,12 @@ const PLACEHOLDERS = {
   bible_search: 'e.g., "Find verses about hope and encouragement" or "Verses about God\'s love"',
   cross_reference: 'e.g., "John 3:16" or "Romans 8:28"',
   verse_context: 'e.g., "Philippians 4:13" or "Psalm 23:1"',
+  compare_translations: 'e.g., "John 3:16" or "Psalm 23:1-3"',
   sermon_ideas: 'e.g., "Faith in difficult times" or "Genesis 12:1-3"'
 }
 
-const TRANSLATIONS = [
-  { code: 'ESV', name: 'English Standard Version' },
-  { code: 'NIV', name: 'New International Version' },
-  { code: 'KJV', name: 'King James Version' },
-  { code: 'NKJV', name: 'New King James Version' },
-  { code: 'NLT', name: 'New Living Translation' },
-  { code: 'NASB', name: 'New American Standard Bible' },
-  { code: 'CSB', name: 'Christian Standard Bible' },
-  { code: 'MSG', name: 'The Message' },
-  { code: 'AMP', name: 'Amplified Bible' },
-  { code: 'HCSB', name: 'Holman Christian Standard Bible' },
-  { code: 'RSV', name: 'Revised Standard Version' },
-  { code: 'NRSV', name: 'New Revised Standard Version' },
-  { code: 'NET', name: 'New English Translation' },
-  { code: 'GNT', name: 'Good News Translation' },
-  { code: 'CEV', name: 'Contemporary English Version' },
-  { code: 'ERV', name: 'Easy-to-Read Version' },
-  { code: 'WEB', name: 'World English Bible' },
-  { code: 'ASV', name: 'American Standard Version' },
-  { code: 'YLT', name: "Young's Literal Translation" },
-  { code: 'Darby', name: 'Darby Translation' },
-  { code: 'ISV', name: 'International Standard Version' },
-  { code: 'AKJV', name: 'American King James Version' },
-  { code: 'TS2009', name: 'The Scriptures 2009' },
-  { code: 'NRSVA', name: 'New Revised Standard Version Anglicized' },
-  { code: 'ICB', name: "International Children's Bible" }
-]
-
 export default function AIAssistantEditor() {
+  const { data: translations, loading: translationsLoading } = useBibleTranslations()
   const [activeTab, setActiveTab] = useState('bible_search')
   const [query, setQuery] = useState('')
   const [translation, setTranslation] = useState('ESV')
@@ -65,6 +42,10 @@ export default function AIAssistantEditor() {
   const [saveForm, setSaveForm] = useState({ title: '', notes: '', primaryVerse: '', relatedVerses: '' })
   const [editingFavorite, setEditingFavorite] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+
+  // Translation Comparison
+  const [selectedTranslations, setSelectedTranslations] = useState(['ESV', 'NIV', 'KJV', 'NLT'])
+  const [comparisonResults, setComparisonResults] = useState([])
 
   // Load favorites when switching to Saved tab
   useEffect(() => {
@@ -90,6 +71,11 @@ export default function AIAssistantEditor() {
     e.preventDefault()
     if (!query.trim()) return
 
+    // Handle translation comparison separately
+    if (activeTab === 'compare_translations') {
+      return handleCompareTranslations()
+    }
+
     setLoading(true)
     setError(null)
     setResponse(null)
@@ -109,6 +95,48 @@ export default function AIAssistantEditor() {
         setError(result.error || 'Failed to get response')
         toast.error(result.error || 'Failed to get response')
       }
+    } catch (err) {
+      setError(err.message || 'An error occurred')
+      toast.error(err.message || 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCompareTranslations = async () => {
+    setLoading(true)
+    setError(null)
+    setComparisonResults([])
+
+    try {
+      // Parse the verse reference
+      const parsed = parseBibleReference(query.trim())
+
+      if (!parsed) {
+        setError('Invalid verse reference. Please use format like "John 3:16" or "Psalm 23:1-3"')
+        toast.error('Invalid verse reference format')
+        return
+      }
+
+      // Fetch verse in all selected translations
+      const results = await Promise.all(
+        selectedTranslations.map(async (trans) => {
+          try {
+            const verseText = await fetchBibleVerse({
+              book: parsed.book,
+              chapter: parsed.chapter,
+              verseStart: parsed.verse_start,
+              verseEnd: parsed.verse_end,
+              translation: trans
+            })
+            return { translation: trans, text: verseText, error: null }
+          } catch (err) {
+            return { translation: trans, text: null, error: err.message }
+          }
+        })
+      )
+
+      setComparisonResults(results)
     } catch (err) {
       setError(err.message || 'An error occurred')
       toast.error(err.message || 'An error occurred')
@@ -271,49 +299,98 @@ export default function AIAssistantEditor() {
       {activeTab !== 'saved' && (
         <div className="bg-white rounded-xl shadow p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Translation Selection */}
+            {activeTab === 'compare_translations' ? (
+              <div>
+                <label className="block text-sm font-medium text-secondary-dark mb-2">
+                  Select Translations to Compare
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-60 overflow-y-auto">
+                  {translations.map(t => (
+                    <label key={t.code} className="flex items-center gap-2 cursor-pointer hover:bg-white p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={selectedTranslations.includes(t.code)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTranslations([...selectedTranslations, t.code])
+                          } else {
+                            setSelectedTranslations(selectedTranslations.filter(c => c !== t.code))
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                        disabled={loading}
+                      />
+                      <span className="text-sm font-medium text-secondary-dark">{t.code}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-secondary-light mt-2">
+                  {selectedTranslations.length} translation{selectedTranslations.length !== 1 ? 's' : ''} selected
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-secondary-dark mb-2">
+                  Bible Translation
+                </label>
+                <select
+                  value={translation}
+                  onChange={(e) => setTranslation(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary"
+                  disabled={loading || translationsLoading}
+                >
+                  {translationsLoading ? (
+                    <option>Loading translations...</option>
+                  ) : (
+                    translations.map(t => (
+                      <option key={t.code} value={t.code}>{t.code} - {t.name}</option>
+                    ))
+                  )}
+                </select>
+              </div>
+            )}
+
+            {/* Query Input */}
             <div>
               <label className="block text-sm font-medium text-secondary-dark mb-2">
-                Bible Translation
+                {activeTab === 'compare_translations' ? 'Verse Reference' : 'Your Question'}
               </label>
-              <select
-                value={translation}
-                onChange={(e) => setTranslation(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary"
-                disabled={loading}
-              >
-                {TRANSLATIONS.map(t => (
-                  <option key={t.code} value={t.code}>{t.code} - {t.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-dark mb-2">
-                Your Question
-              </label>
-              <textarea
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                rows={4}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
-                placeholder={PLACEHOLDERS[activeTab]}
-                disabled={loading}
-              />
+              {activeTab === 'compare_translations' ? (
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
+                  placeholder={PLACEHOLDERS[activeTab]}
+                  disabled={loading}
+                />
+              ) : (
+                <textarea
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  rows={4}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
+                  placeholder={PLACEHOLDERS[activeTab]}
+                  disabled={loading}
+                />
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={loading || !query.trim()}
+              disabled={loading || !query.trim() || (activeTab === 'compare_translations' && selectedTranslations.length === 0)}
               className="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (
                 <>
                   <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
-                  Thinking...
+                  {activeTab === 'compare_translations' ? 'Loading...' : 'Thinking...'}
                 </>
               ) : (
                 <>
                   <SparklesIcon className="h-5 w-5" />
-                  Ask AI Assistant
+                  {activeTab === 'compare_translations' ? 'Compare Translations' : 'Ask AI Assistant'}
                 </>
               )}
             </button>
@@ -344,6 +421,32 @@ export default function AIAssistantEditor() {
                 <div className="prose prose-sm max-w-none whitespace-pre-wrap text-secondary-dark">
                   {response.text}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Translation Comparison Results */}
+          {activeTab === 'compare_translations' && comparisonResults.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-secondary-dark mb-4">Translation Comparison: {query}</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                {comparisonResults.map((result) => (
+                  <div key={result.translation} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-primary text-lg">{result.translation}</h4>
+                      {translations.find(t => t.code === result.translation) && (
+                        <span className="text-xs text-secondary-light">
+                          {translations.find(t => t.code === result.translation).name}
+                        </span>
+                      )}
+                    </div>
+                    {result.error ? (
+                      <p className="text-sm text-red-600">Error: {result.error}</p>
+                    ) : (
+                      <p className="text-secondary-dark leading-relaxed">{result.text}</p>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}

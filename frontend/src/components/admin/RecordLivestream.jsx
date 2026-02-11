@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import toast from 'react-hot-toast'
+import { toast } from 'react-toastify'
 import { useAuth } from '../../lib/AuthContext'
 import { VideoCameraIcon, StopIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline'
 import { format } from 'date-fns'

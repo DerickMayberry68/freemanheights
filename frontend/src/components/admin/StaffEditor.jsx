@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
-import toast from 'react-hot-toast'
+import { toast } from 'react-toastify'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table'
+import ImageUpload from './ImageUpload'
 
 const emptyStaff = {
   name: '',
@@ -23,7 +25,95 @@ export default function StaffEditor() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [sorting, setSorting] = useState([])
   const modalRef = useRef(null)
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Name',
+        cell: info => <span className="font-medium text-secondary-dark">{info.getValue()}</span>
+      },
+      {
+        accessorKey: 'role',
+        header: 'Role',
+        cell: info => info.getValue()
+      },
+      {
+        accessorKey: 'email',
+        header: 'Email',
+        cell: info => info.getValue() || '—'
+      },
+      {
+        accessorKey: 'is_active',
+        header: 'Active',
+        cell: info => (
+          <span className={`inline-block w-2 h-2 rounded-full ${info.getValue() ? 'bg-green-500' : 'bg-gray-300'}`} />
+        )
+      },
+      {
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="text-right">
+            {deleteConfirm === row.original.id ? (
+              <span className="flex items-center justify-end gap-2">
+                <span className="text-red-600 text-xs">Delete?</span>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(row.original.id)}
+                  disabled={saving}
+                  className="text-red-600 font-medium hover:underline disabled:opacity-50"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(null)}
+                  className="text-secondary-light hover:underline"
+                >
+                  No
+                </button>
+              </span>
+            ) : (
+              <span className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEdit(row.original)}
+                  className="text-primary hover:underline flex items-center gap-1"
+                  title="Edit"
+                >
+                  <PencilIcon className="h-4 w-4" />
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(row.original.id)}
+                  className="text-red-600 hover:underline flex items-center gap-1"
+                  title="Delete"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Delete
+                </button>
+              </span>
+            )}
+          </div>
+        )
+      }
+    ],
+    [deleteConfirm, saving]
+  )
+
+  const table = useReactTable({
+    data: staff,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
 
   const loadStaff = () => {
     setLoading(true)
@@ -167,66 +257,38 @@ export default function StaffEditor() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Role</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Active</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-secondary-light uppercase">Actions</th>
-            </tr>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th
+                    key={header.id}
+                    className={`px-6 py-3 ${header.id === 'actions' ? 'text-right' : 'text-left'} text-xs font-medium text-secondary-light uppercase ${header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-100' : ''}`}
+                    onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                    style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <span className="text-gray-400">
+                          {header.column.getIsSorted() === 'asc' && '↑'}
+                          {header.column.getIsSorted() === 'desc' && '↓'}
+                          {!header.column.getIsSorted() && '↕'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {staff.map((member) => (
-              <tr key={member.id}>
-                <td className="px-6 py-4 text-sm font-medium text-secondary-dark">{member.name}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">{member.role}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">{member.email || '—'}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">
-                  <span className={`inline-block w-2 h-2 rounded-full ${member.is_active ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </td>
-                <td className="px-6 py-4 text-sm text-right">
-                  {deleteConfirm === member.id ? (
-                    <span className="flex items-center justify-end gap-2">
-                      <span className="text-red-600 text-xs">Delete?</span>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(member.id)}
-                        disabled={saving}
-                        className="text-red-600 font-medium hover:underline disabled:opacity-50"
-                      >
-                        Yes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(null)}
-                        className="text-secondary-light hover:underline"
-                      >
-                        No
-                      </button>
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(member)}
-                        className="text-primary hover:underline flex items-center gap-1"
-                        title="Edit"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(member.id)}
-                        className="text-red-600 hover:underline flex items-center gap-1"
-                        title="Delete"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                        Delete
-                      </button>
-                    </span>
-                  )}
-                </td>
+            {table.getRowModel().rows.map((row, idx) => (
+              <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="px-6 py-4 text-sm text-secondary-light">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -303,16 +365,12 @@ export default function StaffEditor() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-secondary-dark mb-1">Image URL</label>
-                <input
-                  type="url"
-                  value={form.image_url}
-                  onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="/images/staff-member.jpg"
-                />
-              </div>
+              <ImageUpload
+                currentImageUrl={form.image_url}
+                onImageChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                folder="staff"
+                label="Staff Photo"
+              />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-secondary-dark mb-1">Display Order</label>

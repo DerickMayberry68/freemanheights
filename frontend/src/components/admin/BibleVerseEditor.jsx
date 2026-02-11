@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
-import toast from 'react-hot-toast'
+import { useBibleTranslations } from '../../lib/hooks'
+import { fetchBibleVerse, isTranslationSupported, parseBibleReference } from '../../lib/bibleApi'
+import { toast } from 'react-toastify'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table'
 
 const emptyVerse = {
   verse_text: '',
@@ -11,6 +14,7 @@ const emptyVerse = {
   verse_start: null,
   verse_end: null,
   category: '',
+  translation: 'ESV',
   display_order: 0,
   is_active: true,
 }
@@ -24,7 +28,106 @@ export default function BibleVerseEditor() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [sorting, setSorting] = useState([])
+  const [fetchingVerse, setFetchingVerse] = useState(false)
+  const { data: translations, loading: translationsLoading } = useBibleTranslations()
   const modalRef = useRef(null)
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'reference',
+        header: 'Reference',
+        cell: info => <span className="font-medium text-secondary-dark">{info.getValue()}</span>
+      },
+      {
+        accessorKey: 'verse_text',
+        header: 'Verse Text',
+        cell: info => (
+          <div className="max-w-md">
+            <span className="line-clamp-2">{info.getValue()}</span>
+          </div>
+        )
+      },
+      {
+        accessorKey: 'category',
+        header: 'Category',
+        cell: info => info.getValue() || '—'
+      },
+      {
+        accessorKey: 'translation',
+        header: 'Translation',
+        cell: info => <span className="font-medium text-secondary-dark">{info.getValue() || 'ESV'}</span>
+      },
+      {
+        accessorKey: 'is_active',
+        header: 'Active',
+        cell: info => (
+          <span className={`inline-block w-2 h-2 rounded-full ${info.getValue() ? 'bg-green-500' : 'bg-gray-300'}`} />
+        )
+      },
+      {
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="text-right">
+            {deleteConfirm === row.original.id ? (
+              <span className="flex items-center justify-end gap-2">
+                <span className="text-red-600 text-xs">Delete?</span>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(row.original.id)}
+                  disabled={saving}
+                  className="text-red-600 font-medium hover:underline disabled:opacity-50"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(null)}
+                  className="text-secondary-light hover:underline"
+                >
+                  No
+                </button>
+              </span>
+            ) : (
+              <span className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEdit(row.original)}
+                  className="text-primary hover:underline flex items-center gap-1"
+                  title="Edit"
+                >
+                  <PencilIcon className="h-4 w-4" />
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(row.original.id)}
+                  className="text-red-600 hover:underline flex items-center gap-1"
+                  title="Delete"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Delete
+                </button>
+              </span>
+            )}
+          </div>
+        )
+      }
+    ],
+    [deleteConfirm, saving]
+  )
+
+  const table = useReactTable({
+    data: verses,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
 
   const loadVerses = () => {
     setLoading(true)
@@ -68,6 +171,7 @@ export default function BibleVerseEditor() {
       verse_start: verse.verse_start || null,
       verse_end: verse.verse_end || null,
       category: verse.category || '',
+      translation: verse.translation || 'ESV',
       display_order: verse.display_order ?? 0,
       is_active: verse.is_active ?? true,
     })
@@ -82,6 +186,81 @@ export default function BibleVerseEditor() {
     setError(null)
   }
 
+  const fetchVerseText = async (book, chapter, verseStart, verseEnd, translation) => {
+    setFetchingVerse(true)
+    setError(null)
+
+    try {
+      const verseText = await fetchBibleVerse({
+        book,
+        chapter,
+        verseStart,
+        verseEnd,
+        translation
+      })
+
+      if (verseText) {
+        setForm((f) => ({ ...f, verse_text: verseText }))
+        toast.success(`Verse text fetched successfully from ${translation}`)
+      }
+    } catch (err) {
+      console.error('Error fetching verse:', err)
+      toast.error(err.message || 'Failed to fetch verse. You can manually enter the text.', {
+        duration: 5000
+      })
+    } finally {
+      setFetchingVerse(false)
+    }
+  }
+
+  const handleReferenceChange = (referenceText) => {
+    // Update the reference field
+    setForm((f) => ({ ...f, reference: referenceText }))
+
+    // Try to parse the reference
+    const parsed = parseBibleReference(referenceText)
+
+    if (parsed) {
+      // Auto-fill the parsed fields
+      setForm((f) => ({
+        ...f,
+        reference: referenceText,
+        book: parsed.book,
+        chapter: parsed.chapter,
+        verse_start: parsed.verse_start,
+        verse_end: parsed.verse_end
+      }))
+
+      // Automatically fetch the verse text
+      fetchVerseText(
+        parsed.book,
+        parsed.chapter,
+        parsed.verse_start,
+        parsed.verse_end,
+        form.translation
+      )
+    }
+  }
+
+  const handleTranslationChange = async (newTranslation) => {
+    // Update the form with new translation
+    setForm((f) => ({ ...f, translation: newTranslation }))
+
+    // Only fetch if we have enough information
+    if (!form.book || !form.chapter || !form.verse_start) {
+      return
+    }
+
+    // Fetch verse text for the new translation
+    fetchVerseText(
+      form.book,
+      form.chapter,
+      form.verse_start,
+      form.verse_end,
+      newTranslation
+    )
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSaving(true)
@@ -94,6 +273,7 @@ export default function BibleVerseEditor() {
       verse_start: form.verse_start || null,
       verse_end: form.verse_end || null,
       category: form.category.trim() || null,
+      translation: form.translation || 'ESV',
       display_order: form.display_order,
       is_active: form.is_active,
     }
@@ -175,66 +355,38 @@ export default function BibleVerseEditor() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Reference</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Verse Text</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Category</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Active</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-secondary-light uppercase">Actions</th>
-            </tr>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th
+                    key={header.id}
+                    className={`px-6 py-3 ${header.id === 'actions' ? 'text-right' : 'text-left'} text-xs font-medium text-secondary-light uppercase ${header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-100' : ''}`}
+                    onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                    style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <span className="text-gray-400">
+                          {header.column.getIsSorted() === 'asc' && '↑'}
+                          {header.column.getIsSorted() === 'desc' && '↓'}
+                          {!header.column.getIsSorted() && '↕'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {verses.map((verse) => (
-              <tr key={verse.id}>
-                <td className="px-6 py-4 text-sm font-medium text-secondary-dark">{verse.reference}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light max-w-md truncate">{verse.verse_text}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">{verse.category || '—'}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">
-                  <span className={`inline-block w-2 h-2 rounded-full ${verse.is_active ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </td>
-                <td className="px-6 py-4 text-sm text-right">
-                  {deleteConfirm === verse.id ? (
-                    <span className="flex items-center justify-end gap-2">
-                      <span className="text-red-600 text-xs">Delete?</span>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(verse.id)}
-                        disabled={saving}
-                        className="text-red-600 font-medium hover:underline disabled:opacity-50"
-                      >
-                        Yes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(null)}
-                        className="text-secondary-light hover:underline"
-                      >
-                        No
-                      </button>
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(verse)}
-                        className="text-primary hover:underline flex items-center gap-1"
-                        title="Edit"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(verse.id)}
-                        className="text-red-600 hover:underline flex items-center gap-1"
-                        title="Delete"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                        Delete
-                      </button>
-                    </span>
-                  )}
-                </td>
+            {table.getRowModel().rows.map((row, idx) => (
+              <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="px-6 py-4 text-sm text-secondary-light">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -262,7 +414,20 @@ export default function BibleVerseEditor() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-secondary-dark mb-1">Verse Text *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-secondary-dark">
+                    Verse Text * {fetchingVerse && <span className="text-primary text-xs">(Fetching...)</span>}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => fetchVerseText(form.book, form.chapter, form.verse_start, form.verse_end, form.translation)}
+                    disabled={fetchingVerse || !form.book || !form.chapter || !form.verse_start}
+                    className="text-xs text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Fetch verse text from API"
+                  >
+                    Fetch Verse
+                  </button>
+                </div>
                 <textarea
                   value={form.verse_text}
                   onChange={(e) => setForm((f) => ({ ...f, verse_text: e.target.value }))}
@@ -270,19 +435,26 @@ export default function BibleVerseEditor() {
                   className="w-full rounded-lg border border-gray-300 px-3 py-2"
                   placeholder="For God so loved the world..."
                   required
+                  disabled={fetchingVerse}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-secondary-dark mb-1">Reference *</label>
+                  <label className="block text-sm font-medium text-secondary-dark mb-1">
+                    Reference * <span className="text-xs text-secondary-light font-normal">(Auto-fills fields)</span>
+                  </label>
                   <input
                     type="text"
                     value={form.reference}
-                    onChange={(e) => setForm((f) => ({ ...f, reference: e.target.value }))}
-                    placeholder="John 3:16"
+                    onChange={(e) => handleReferenceChange(e.target.value)}
+                    placeholder="e.g., John 3:16 or Philippians 4:13"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2"
                     required
+                    disabled={fetchingVerse}
                   />
+                  <p className="text-xs text-secondary-light mt-1">
+                    Type a reference to auto-fill all fields and fetch verse text
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-secondary-dark mb-1">Book *</label>
@@ -328,15 +500,40 @@ export default function BibleVerseEditor() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-secondary-dark mb-1">Category</label>
-                <input
-                  type="text"
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  placeholder="e.g., Hope, Faith, Love"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-dark mb-1">Category</label>
+                  <input
+                    type="text"
+                    value={form.category}
+                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                    placeholder="e.g., Hope, Faith, Love"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-dark mb-1">Translation *</label>
+                  <select
+                    value={form.translation}
+                    onChange={(e) => handleTranslationChange(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                    required
+                    disabled={translationsLoading || fetchingVerse}
+                  >
+                    {translationsLoading ? (
+                      <option>Loading translations...</option>
+                    ) : (
+                      translations.map(trans => (
+                        <option key={trans.code} value={trans.code}>
+                          {trans.abbreviation} - {trans.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  {fetchingVerse && (
+                    <p className="text-xs text-secondary-light mt-1">Fetching verse text using Claude AI...</p>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

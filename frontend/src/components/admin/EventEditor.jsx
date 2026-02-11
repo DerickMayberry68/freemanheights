@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
-import toast from 'react-hot-toast'
+import { toast } from 'react-toastify'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table'
+import ImageUpload from './ImageUpload'
 
 function toDatetimeLocal(iso) {
   if (!iso) return ''
@@ -22,6 +24,7 @@ const emptyEvent = {
   event_date: '',
   end_date: '',
   location: '',
+  image_url: '',
   is_featured: false,
 }
 
@@ -34,7 +37,88 @@ export default function EventEditor() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [sorting, setSorting] = useState([])
   const modalRef = useRef(null)
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'title',
+        header: 'Title',
+        cell: info => <span className="font-medium text-secondary-dark">{info.getValue()}</span>
+      },
+      {
+        accessorKey: 'event_date',
+        header: 'Date',
+        cell: info => format(new Date(info.getValue()), 'MMM d, yyyy • h:mm a')
+      },
+      {
+        accessorKey: 'location',
+        header: 'Location',
+        cell: info => info.getValue() || '—'
+      },
+      {
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="text-right">
+            {deleteConfirm === row.original.id ? (
+              <span className="flex items-center justify-end gap-2">
+                <span className="text-red-600 text-xs">Delete?</span>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(row.original.id)}
+                  disabled={saving}
+                  className="text-red-600 font-medium hover:underline disabled:opacity-50"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(null)}
+                  className="text-secondary-light hover:underline"
+                >
+                  No
+                </button>
+              </span>
+            ) : (
+              <span className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEdit(row.original)}
+                  className="text-primary hover:underline flex items-center gap-1"
+                  title="Edit"
+                >
+                  <PencilIcon className="h-4 w-4" />
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(row.original.id)}
+                  className="text-red-600 hover:underline flex items-center gap-1"
+                  title="Delete"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Delete
+                </button>
+              </span>
+            )}
+          </div>
+        )
+      }
+    ],
+    [deleteConfirm, saving]
+  )
+
+  const table = useReactTable({
+    data: events,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
 
   const loadEvents = () => {
     setLoading(true)
@@ -82,6 +166,7 @@ export default function EventEditor() {
       event_date: toDatetimeLocal(event.event_date),
       end_date: toDatetimeLocal(event.end_date) || '',
       location: event.location || '',
+      image_url: event.image_url || '',
       is_featured: event.is_featured ?? false,
     })
     setFormOpen(true)
@@ -105,6 +190,7 @@ export default function EventEditor() {
       event_date: fromDatetimeLocal(form.event_date),
       end_date: form.end_date ? fromDatetimeLocal(form.end_date) : null,
       location: form.location.trim() || null,
+      image_url: form.image_url.trim() || null,
       is_featured: form.is_featured,
     }
     if (!payload.title) {
@@ -180,64 +266,38 @@ export default function EventEditor() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Title</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Location</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-secondary-light uppercase">Actions</th>
-            </tr>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th
+                    key={header.id}
+                    className={`px-6 py-3 ${header.id === 'actions' ? 'text-right' : 'text-left'} text-xs font-medium text-secondary-light uppercase ${header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-100' : ''}`}
+                    onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                    style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <span className="text-gray-400">
+                          {header.column.getIsSorted() === 'asc' && '↑'}
+                          {header.column.getIsSorted() === 'desc' && '↓'}
+                          {!header.column.getIsSorted() && '↕'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {events.map((event) => (
-              <tr key={event.id}>
-                <td className="px-6 py-4 text-sm font-medium text-secondary-dark">{event.title}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">
-                  {format(new Date(event.event_date), 'MMM d, yyyy • h:mm a')}
-                </td>
-                <td className="px-6 py-4 text-sm text-secondary-light">{event.location || '—'}</td>
-                <td className="px-6 py-4 text-sm text-right">
-                  {deleteConfirm === event.id ? (
-                    <span className="flex items-center justify-end gap-2">
-                      <span className="text-red-600 text-xs">Delete?</span>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(event.id)}
-                        disabled={saving}
-                        className="text-red-600 font-medium hover:underline disabled:opacity-50"
-                      >
-                        Yes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(null)}
-                        className="text-secondary-light hover:underline"
-                      >
-                        No
-                      </button>
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(event)}
-                        className="text-primary hover:underline flex items-center gap-1"
-                        title="Edit"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(event.id)}
-                        className="text-red-600 hover:underline flex items-center gap-1"
-                        title="Delete"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                        Delete
-                      </button>
-                    </span>
-                  )}
-                </td>
+            {table.getRowModel().rows.map((row, idx) => (
+              <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="px-6 py-4 text-sm text-secondary-light">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -312,6 +372,12 @@ export default function EventEditor() {
                   className="w-full rounded-lg border border-gray-300 px-3 py-2"
                 />
               </div>
+              <ImageUpload
+                currentImageUrl={form.image_url}
+                onImageChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                folder="events"
+                label="Event Image"
+              />
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"

@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
-import toast from 'react-hot-toast'
+import { toast } from 'react-toastify'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table'
+import ImageUpload from './ImageUpload'
 
 const emptyMinistry = {
   name: '',
@@ -32,7 +34,95 @@ export default function MinistryEditor() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [sorting, setSorting] = useState([])
   const modalRef = useRef(null)
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Name',
+        cell: info => <span className="font-medium text-secondary-dark">{info.getValue()}</span>
+      },
+      {
+        accessorKey: 'target_audience',
+        header: 'Audience',
+        cell: info => info.getValue() || '—'
+      },
+      {
+        accessorKey: 'meeting_time',
+        header: 'Meeting Time',
+        cell: info => info.getValue() || '—'
+      },
+      {
+        accessorKey: 'is_active',
+        header: 'Active',
+        cell: info => (
+          <span className={`inline-block w-2 h-2 rounded-full ${info.getValue() ? 'bg-green-500' : 'bg-gray-300'}`} />
+        )
+      },
+      {
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="text-right">
+            {deleteConfirm === row.original.id ? (
+              <span className="flex items-center justify-end gap-2">
+                <span className="text-red-600 text-xs">Delete?</span>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(row.original.id)}
+                  disabled={saving}
+                  className="text-red-600 font-medium hover:underline disabled:opacity-50"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(null)}
+                  className="text-secondary-light hover:underline"
+                >
+                  No
+                </button>
+              </span>
+            ) : (
+              <span className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEdit(row.original)}
+                  className="text-primary hover:underline flex items-center gap-1"
+                  title="Edit"
+                >
+                  <PencilIcon className="h-4 w-4" />
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(row.original.id)}
+                  className="text-red-600 hover:underline flex items-center gap-1"
+                  title="Delete"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Delete
+                </button>
+              </span>
+            )}
+          </div>
+        )
+      }
+    ],
+    [deleteConfirm, saving]
+  )
+
+  const table = useReactTable({
+    data: ministries,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
 
   const loadMinistries = () => {
     setLoading(true)
@@ -183,66 +273,38 @@ export default function MinistryEditor() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Audience</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Meeting Time</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-secondary-light uppercase">Active</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-secondary-light uppercase">Actions</th>
-            </tr>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th
+                    key={header.id}
+                    className={`px-6 py-3 ${header.id === 'actions' ? 'text-right' : 'text-left'} text-xs font-medium text-secondary-light uppercase ${header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-100' : ''}`}
+                    onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+                    style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <span className="text-gray-400">
+                          {header.column.getIsSorted() === 'asc' && '↑'}
+                          {header.column.getIsSorted() === 'desc' && '↓'}
+                          {!header.column.getIsSorted() && '↕'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {ministries.map((ministry) => (
-              <tr key={ministry.id}>
-                <td className="px-6 py-4 text-sm font-medium text-secondary-dark">{ministry.name}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">{ministry.target_audience || '—'}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">{ministry.meeting_time || '—'}</td>
-                <td className="px-6 py-4 text-sm text-secondary-light">
-                  <span className={`inline-block w-2 h-2 rounded-full ${ministry.is_active ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </td>
-                <td className="px-6 py-4 text-sm text-right">
-                  {deleteConfirm === ministry.id ? (
-                    <span className="flex items-center justify-end gap-2">
-                      <span className="text-red-600 text-xs">Delete?</span>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(ministry.id)}
-                        disabled={saving}
-                        className="text-red-600 font-medium hover:underline disabled:opacity-50"
-                      >
-                        Yes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(null)}
-                        className="text-secondary-light hover:underline"
-                      >
-                        No
-                      </button>
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(ministry)}
-                        className="text-primary hover:underline flex items-center gap-1"
-                        title="Edit"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(ministry.id)}
-                        className="text-red-600 hover:underline flex items-center gap-1"
-                        title="Delete"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                        Delete
-                      </button>
-                    </span>
-                  )}
-                </td>
+            {table.getRowModel().rows.map((row, idx) => (
+              <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="px-6 py-4 text-sm text-secondary-light">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -339,15 +401,12 @@ export default function MinistryEditor() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-secondary-dark mb-1">Image URL</label>
-                <input
-                  type="url"
-                  value={form.image_url}
-                  onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                />
-              </div>
+              <ImageUpload
+                currentImageUrl={form.image_url}
+                onImageChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                folder="ministries"
+                label="Ministry Image"
+              />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-secondary-dark mb-1">Display Order</label>

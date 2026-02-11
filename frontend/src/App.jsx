@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
-import { Toaster } from 'react-hot-toast'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './lib/AuthContext'
 import { ModalProvider } from './lib/ModalContext'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -45,7 +46,18 @@ function App() {
         <Footer />
       </div>
       </ErrorBoundary>
-      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <Analytics />
       </ModalProvider>
     </AuthProvider>

@@ -129,3 +129,46 @@ export async function deleteFavorite(id) {
 
   if (error) throw error
 }
+
+/**
+ * Fetch a Bible verse using Claude AI
+ * @param {Object} params - Verse parameters
+ * @param {string} params.book - Book name (e.g., "John")
+ * @param {number} params.chapter - Chapter number
+ * @param {number} params.verseStart - Starting verse number
+ * @param {number} params.verseEnd - Ending verse number (optional)
+ * @param {string} params.translation - Translation code (e.g., "ESV", "KJV", "NIV")
+ * @returns {Promise<string>} - The verse text
+ */
+export async function fetchBibleVerseWithClaude({ book, chapter, verseStart, verseEnd, translation }) {
+  try {
+    // Build the reference
+    const reference = verseEnd && verseEnd !== verseStart
+      ? `${book} ${chapter}:${verseStart}-${verseEnd}`
+      : `${book} ${chapter}:${verseStart}`
+
+    // Create a specific query for Claude to fetch the verse
+    const query = `Please provide the exact text of ${reference} from the ${translation} translation.
+
+CRITICAL INSTRUCTIONS:
+- Return ONLY ${reference} - do NOT include any additional verses, even if they complete a thought
+- Do NOT add verse ${verseEnd ? verseEnd + 1 : verseStart + 1} or any other verses
+- Return the verse text WITHOUT the reference, verse numbers, quotation marks, or any commentary
+- Just the raw verse text exactly as it appears in ${translation}`
+
+    // Call Claude assistant with bible_search query type
+    const result = await callClaudeAssistant(query, 'bible_search', translation)
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch verse')
+    }
+
+    // Extract the verse text from the response
+    // The response should contain the verse text
+    return result.response || result.data || result.text
+
+  } catch (error) {
+    console.error('Error fetching verse with Claude:', error)
+    throw new Error(error.message || 'Failed to fetch verse using Claude AI')
+  }
+}
