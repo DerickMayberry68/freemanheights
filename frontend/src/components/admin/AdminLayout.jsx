@@ -12,6 +12,7 @@ const adminNav = [
   { to: '/admin/ministries', label: 'Ministries' },
   { to: '/admin/staff', label: 'Staff' },
   { to: '/admin/bible-verses', label: 'Bible Verses' },
+  { to: '/admin/ai-assistant', label: 'AI Bible Assistant' },
 ]
 
 export default function AdminLayout({ children }) {

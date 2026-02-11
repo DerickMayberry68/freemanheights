@@ -5,6 +5,7 @@ import SermonEditor from '../../components/admin/SermonEditor'
 import MinistryEditor from '../../components/admin/MinistryEditor'
 import StaffEditor from '../../components/admin/StaffEditor'
 import BibleVerseEditor from '../../components/admin/BibleVerseEditor'
+import AIAssistantEditor from '../../components/admin/AIAssistantEditor'
 import ApprovalsEditor from '../../components/admin/ApprovalsEditor'
 import RecordLivestream from '../../components/admin/RecordLivestream'
 
@@ -51,6 +52,11 @@ function AdminHome() {
           <p className="text-sm text-secondary-light mt-1">Manage rotating Bible verses</p>
           <Link to="/admin/bible-verses" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Bible Verses →</Link>
         </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">AI Bible Assistant</h3>
+          <p className="text-sm text-secondary-light mt-1">AI-powered Bible study and sermon prep</p>
+          <Link to="/admin/ai-assistant" className="text-primary font-medium mt-2 inline-block hover:underline">Open Assistant →</Link>
+        </div>
       </div>
     </div>
   )
@@ -67,6 +73,7 @@ export default function AdminDashboard() {
         <Route path="ministries" element={<MinistryEditor />} />
         <Route path="staff" element={<StaffEditor />} />
         <Route path="bible-verses" element={<BibleVerseEditor />} />
+        <Route path="ai-assistant" element={<AIAssistantEditor />} />
         <Route path="record" element={<RecordLivestream />} />
       </Routes>
     </AdminLayout>

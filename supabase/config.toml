@@ -11,3 +11,6 @@ enabled = true
 
 [storage]
 enabled = true
+
+[functions.claude-assistant]
+verify_jwt = false
