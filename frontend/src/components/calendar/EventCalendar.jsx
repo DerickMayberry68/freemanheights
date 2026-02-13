@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { enUS } from 'date-fns/locale'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { XMarkIcon, MapPinIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { getHolidaysInRange } from '../../lib/holidays'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 const locales = { 'en-US': enUS }
@@ -32,6 +33,8 @@ export default function EventCalendar() {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentView, setCurrentView] = useState('month')
   const { approved } = useAuth()
 
   useEffect(() => {
@@ -64,18 +67,67 @@ export default function EventCalendar() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [selectedEvent])
 
+  // Combine events with holidays
+  const allEvents = useMemo(() => {
+    const start = new Date()
+    start.setFullYear(start.getFullYear() - 1)
+    const end = new Date()
+    end.setFullYear(end.getFullYear() + 2)
+
+    const holidays = getHolidaysInRange(start, end)
+    const holidayEvents = holidays.map((holiday) => ({
+      id: `holiday-${holiday.date.getTime()}`,
+      title: holiday.name,
+      start: holiday.date,
+      end: holiday.date,
+      resource: {
+        isHoliday: true,
+        holidayType: holiday.type,
+        title: holiday.name,
+        event_date: holiday.date.toISOString(),
+      },
+    }))
+
+    return [...events, ...holidayEvents]
+  }, [events])
+
   const handleSelectEvent = (event) => {
     setSelectedEvent(event.resource)
   }
 
-  const eventStyleGetter = () => ({
-    style: {
-      backgroundColor: '#D4A84B',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      border: 'none',
-    },
-  })
+  const handleNavigate = (newDate) => {
+    setCurrentDate(newDate)
+  }
+
+  const handleViewChange = (newView) => {
+    setCurrentView(newView)
+  }
+
+  const eventStyleGetter = (event) => {
+    // Default church event style
+    let backgroundColor = '#D4A84B'
+    let color = '#FFFFFF'
+
+    // Holiday styles
+    if (event.resource?.isHoliday) {
+      if (event.resource.holidayType === 'christian') {
+        backgroundColor = '#8B5CF6' // Purple for Christian holidays
+      } else {
+        backgroundColor = '#3B82F6' // Blue for national holidays
+      }
+    }
+
+    return {
+      style: {
+        backgroundColor,
+        color,
+        borderRadius: '6px',
+        cursor: 'pointer',
+        border: 'none',
+        fontSize: '0.85rem',
+      },
+    }
+  }
 
   const messages = {
     today: 'Today',
@@ -101,25 +153,44 @@ export default function EventCalendar() {
 
   return (
     <div className="bg-white rounded-xl border border-primary/10 overflow-hidden p-4 md:p-8">
-      {approved && (
-        <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex items-center justify-between gap-4">
+        {/* Legend */}
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#D4A84B' }}></div>
+            <span className="text-secondary-dark">Church Events</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#8B5CF6' }}></div>
+            <span className="text-secondary-dark">Christian Holidays</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3B82F6' }}></div>
+            <span className="text-secondary-dark">National Holidays</span>
+          </div>
+        </div>
+
+        {approved && (
           <a
             href="/admin/events"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors shrink-0"
           >
             Manage Events
           </a>
-        </div>
-      )}
+        )}
+      </div>
       <div className="rbc-calendar-wrapper rbc-calendar-fh">
         <Calendar
           localizer={localizer}
-          events={events}
+          events={allEvents}
           startAccessor="start"
           endAccessor="end"
           style={{ minHeight: 900, height: '80vh' }}
           views={['month', 'agenda']}
-          defaultView="month"
+          view={currentView}
+          date={currentDate}
+          onNavigate={handleNavigate}
+          onView={handleViewChange}
           popup
           eventPropGetter={eventStyleGetter}
           messages={messages}
@@ -132,7 +203,18 @@ export default function EventCalendar() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-dark/30 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setSelectedEvent(null) }}>
           <div className="bg-white rounded-xl border border-primary/10 max-w-md w-full" role="dialog" aria-modal="true" aria-label="Event details">
             <div className="flex items-center justify-between p-5 border-b border-primary/10">
-              <h3 className="text-lg font-serif font-semibold text-secondary-dark">{selectedEvent.title}</h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-serif font-semibold text-secondary-dark">{selectedEvent.title}</h3>
+                {selectedEvent.isHoliday && (
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    selectedEvent.holidayType === 'christian'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {selectedEvent.holidayType === 'christian' ? 'Christian' : 'National'}
+                  </span>
+                )}
+              </div>
               <button type="button" onClick={() => setSelectedEvent(null)} className="p-2 rounded-lg hover:bg-primary-50 transition-colors">
                 <XMarkIcon className="h-5 w-5 text-secondary" />
               </button>
@@ -144,10 +226,12 @@ export default function EventCalendar() {
                   <p className="text-sm font-medium text-secondary-dark">
                     {format(new Date(selectedEvent.event_date), 'EEEE, MMMM d, yyyy')}
                   </p>
-                  <p className="text-sm text-secondary-light">
-                    {format(new Date(selectedEvent.event_date), 'h:mm a')}
-                    {selectedEvent.end_date && ` \u2013 ${format(new Date(selectedEvent.end_date), 'h:mm a')}`}
-                  </p>
+                  {!selectedEvent.isHoliday && (
+                    <p className="text-sm text-secondary-light">
+                      {format(new Date(selectedEvent.event_date), 'h:mm a')}
+                      {selectedEvent.end_date && ` – ${format(new Date(selectedEvent.end_date), 'h:mm a')}`}
+                    </p>
+                  )}
                 </div>
               </div>
               {selectedEvent.location && (
@@ -161,7 +245,7 @@ export default function EventCalendar() {
               )}
             </div>
             <div className="p-5 border-t border-primary/10 flex justify-end gap-2">
-              {approved && (
+              {approved && !selectedEvent.isHoliday && (
                 <a
                   href={`/admin/events?edit=${selectedEvent.id}`}
                   className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark text-sm transition-colors"

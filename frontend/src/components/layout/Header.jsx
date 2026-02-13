@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Dialog, DialogPanel } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon, HandRaisedIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../lib/AuthContext'
+import PrayerRequestModal from '../prayer/PrayerRequestModal'
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -16,6 +17,7 @@ const navLinks = [
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [prayerModalOpen, setPrayerModalOpen] = useState(false)
   const { session, signOut } = useAuth()
   const location = useLocation()
 
@@ -55,6 +57,15 @@ export default function Header() {
                 </Link>
               )
             })}
+            <div className="w-px h-6 bg-primary/15 mx-2" />
+            <button
+              type="button"
+              onClick={() => setPrayerModalOpen(true)}
+              className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary-50 rounded-md transition-colors flex items-center gap-1.5"
+            >
+              <HandRaisedIcon className="h-4 w-4" />
+              Prayer Request
+            </button>
             <div className="w-px h-6 bg-primary/15 mx-2" />
             <Link
               to="/admin"
@@ -121,6 +132,15 @@ export default function Header() {
                 )
               })}
               <div className="h-px bg-primary/10 my-3" />
+              <button
+                type="button"
+                onClick={() => { setPrayerModalOpen(true); setMobileMenuOpen(false); }}
+                className="px-4 py-3 text-base font-medium text-primary hover:bg-primary-50 rounded-lg transition-colors text-left flex items-center gap-2 w-full"
+              >
+                <HandRaisedIcon className="h-5 w-5" />
+                Prayer Request
+              </button>
+              <div className="h-px bg-primary/10 my-3" />
               <Link
                 to="/admin"
                 className="px-4 py-3 text-base font-medium text-accent hover:text-primary rounded-lg transition-colors"
@@ -142,6 +162,11 @@ export default function Header() {
           </div>
         </DialogPanel>
       </Dialog>
+
+      <PrayerRequestModal
+        isOpen={prayerModalOpen}
+        onClose={() => setPrayerModalOpen(false)}
+      />
     </header>
   )
 }

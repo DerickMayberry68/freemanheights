@@ -1,6 +1,6 @@
 import { useStaff } from '../lib/hooks'
 import StaffCard from '../components/staff/StaffCard'
-import PrayerRequestForm from '../components/staff/PrayerRequestForm'
+import PrayerRequestForm from '../components/prayer/PrayerRequestForm'
 
 export default function StaffPage() {
   const { data: staff, loading } = useStaff()

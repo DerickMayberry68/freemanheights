@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
-export default function PrayerRequestForm() {
+export default function PrayerRequestForm({ onSuccess }) {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -9,6 +9,7 @@ export default function PrayerRequestForm() {
     name: '',
     email: '',
     phone: '',
+    birthday: '',
     request: '',
   })
 
@@ -20,6 +21,7 @@ export default function PrayerRequestForm() {
       name: form.name,
       email: form.email || null,
       phone: form.phone || null,
+      birthday: form.birthday || null,
       request: form.request,
     })
     setLoading(false)
@@ -28,7 +30,12 @@ export default function PrayerRequestForm() {
       return
     }
     setSubmitted(true)
-    setForm({ name: '', email: '', phone: '', request: '' })
+    setForm({ name: '', email: '', phone: '', birthday: '', request: '' })
+
+    // Call onSuccess callback if provided
+    if (onSuccess) {
+      onSuccess()
+    }
   }
 
   if (submitted) {
@@ -83,6 +90,18 @@ export default function PrayerRequestForm() {
           type="tel"
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          className="w-full px-4 py-2.5 border border-primary/20 rounded-lg bg-cream focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+        />
+      </div>
+      <div>
+        <label htmlFor="birthday" className="block text-sm font-medium text-secondary-dark mb-1">
+          Birthday <span className="text-secondary-light text-xs">(optional, helps us personalize our response)</span>
+        </label>
+        <input
+          id="birthday"
+          type="date"
+          value={form.birthday}
+          onChange={(e) => setForm({ ...form, birthday: e.target.value })}
           className="w-full px-4 py-2.5 border border-primary/20 rounded-lg bg-cream focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
         />
       </div>
