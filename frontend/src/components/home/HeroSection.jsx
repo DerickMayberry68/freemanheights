@@ -25,7 +25,7 @@ export default function HeroSection() {
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
         <img
-          src="/images/redLogo.png"
+          src="/images/redLogo2.png"
           alt="Freeman Heights Baptist Church"
           className="h-64 md:h-80 w-auto object-contain mb-6 drop-shadow-2xl"
         />
