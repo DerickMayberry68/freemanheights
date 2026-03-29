@@ -11,6 +11,15 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirect = searchParams.get('redirect') || '/admin'
+  const emailVerified = searchParams.get('email_verified') === '1'
+
+  const getLoginErrorMessage = (err) => {
+    const message = err?.message || ''
+    if (message.toLowerCase().includes('email not confirmed')) {
+      return 'Please verify your email first. Search your inbox for subjects like "Confirm your signup" or "Confirm your email" from "no-reply@mail.app.supabase.io" (or your church\'s custom sender), and check spam/junk too.'
+    }
+    return message || 'Invalid email or password.'
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -20,7 +29,7 @@ export default function LoginPage() {
       await signIn(email, password)
       navigate(redirect, { replace: true })
     } catch (err) {
-      setError(err.message || 'Invalid email or password.')
+      setError(getLoginErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -33,6 +42,11 @@ export default function LoginPage() {
           <h1 className="text-2xl font-serif font-bold text-secondary-dark mb-2">Admin Login</h1>
           <p className="text-secondary-light text-sm mb-6">Sign in to manage the site.</p>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {emailVerified && (
+              <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
+                Email verification completed. You can sign in now.
+              </div>
+            )}
             {error && (
               <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
             )}

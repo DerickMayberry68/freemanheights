@@ -13,6 +13,13 @@ export default function RegisterPage() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
 
+  const buildRegistrationMessage = (emailVerificationRequired) => {
+    if (emailVerificationRequired) {
+      return 'Account created! Check your email and click the verification link before signing in. After verification, your access is still pending approval from an existing admin.'
+    }
+    return 'Account created! Your access is pending approval from an existing admin. You can sign in to see your status.'
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -27,11 +34,12 @@ export default function RegisterPage() {
     }
     setLoading(true)
     try {
-      const { user } = await signUp(email, password)
+      const { user, session } = await signUp(email, password)
       if (user?.id) {
         await supabase.rpc('ensure_approval_exists', { p_user_id: user.id, p_email: email }).catch(() => {})
       }
-      setSuccess('Account created! Your access is pending approval from an existing admin. You can sign in to see your status.')
+      const emailVerificationRequired = !session
+      setSuccess(buildRegistrationMessage(emailVerificationRequired))
       setTimeout(() => navigate('/login?redirect=/admin'), 3000)
     } catch (err) {
       setError(err.message || 'Registration failed.')

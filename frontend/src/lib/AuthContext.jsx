@@ -12,21 +12,34 @@ export function AuthProvider({ children }) {
   const [preferencesLoading, setPreferencesLoading] = useState(false)
 
   useEffect(() => {
+    let mounted = true
+
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!mounted) return
       setSession(s)
       setLoading(false)
     })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      const userChanged = session?.user?.id !== newSession?.user?.id
-      setSession(newSession)
-      // Only reset approval if user actually changed (logged out/in), not on token refresh
-      if (userChanged) {
-        setApproved(null)
-        setUserPreferences(null)
-      }
+      setSession((prevSession) => {
+        const prevUserId = prevSession?.user?.id
+        const nextUserId = newSession?.user?.id
+
+        // Only reset approval if user actually changed (logged out/in), not on token refresh.
+        if (prevUserId !== nextUserId) {
+          setApproved(null)
+          setUserPreferences(null)
+        }
+
+        return newSession
+      })
     })
-    return () => subscription?.unsubscribe()
-  }, [session?.user?.id])
+
+    return () => {
+      mounted = false
+      subscription?.unsubscribe()
+    }
+  }, [])
 
   const fetchApproval = async () => {
     const { data: { session: s } } = await supabase.auth.getSession()
@@ -75,7 +88,20 @@ export function AuthProvider({ children }) {
   }
 
   const signUp = async (email, password, options = {}) => {
-    const { data, error } = await supabase.auth.signUp({ email, password, options })
+    const emailRedirectTo =
+      options?.emailRedirectTo ||
+      (typeof window !== 'undefined'
+        ? `${window.location.origin}/login?redirect=${encodeURIComponent('/admin')}&email_verified=1`
+        : undefined)
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        ...options,
+        ...(emailRedirectTo ? { emailRedirectTo } : {}),
+      },
+    })
     if (error) throw error
     return data
   }

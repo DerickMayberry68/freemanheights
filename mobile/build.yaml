@@ -1,0 +1,8 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # All JSON keys are snake_case — maps automatically to camelCase Dart fields
+          field_rename: snake
+          explicit_to_json: true

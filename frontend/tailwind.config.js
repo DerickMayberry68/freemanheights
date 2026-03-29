@@ -39,9 +39,14 @@ export default {
           '50%': { opacity: '0' },
           '100%': { opacity: '0' },
         },
+        ticker: {
+          '0%': { left: '100%' },
+          '100%': { left: '-100%' },
+        },
       },
       animation: {
         'word-flicker': 'word-flicker 4s ease-in-out infinite',
+        'ticker': 'ticker 28s linear infinite',
       },
     },
   },

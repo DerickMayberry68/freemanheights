@@ -104,16 +104,20 @@ export default function EventCalendar() {
   }
 
   const eventStyleGetter = (event) => {
-    // Default church event style
     let backgroundColor = '#D4A84B'
     let color = '#FFFFFF'
+    let opacity = 1
+    let textDecoration = 'none'
 
-    // Holiday styles
-    if (event.resource?.isHoliday) {
+    if (event.resource?.is_cancelled) {
+      backgroundColor = '#94A3B8' // slate-400 — greyed out
+      textDecoration = 'line-through'
+      opacity = 0.7
+    } else if (event.resource?.isHoliday) {
       if (event.resource.holidayType === 'christian') {
-        backgroundColor = '#8B5CF6' // Purple for Christian holidays
+        backgroundColor = '#8B5CF6'
       } else {
-        backgroundColor = '#3B82F6' // Blue for national holidays
+        backgroundColor = '#3B82F6'
       }
     }
 
@@ -125,6 +129,8 @@ export default function EventCalendar() {
         cursor: 'pointer',
         border: 'none',
         fontSize: '0.85rem',
+        opacity,
+        textDecoration,
       },
     }
   }

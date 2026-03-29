@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { toast } from 'react-toastify'
+import Swal from 'sweetalert2'
 import {
   PhoneIcon,
   EnvelopeIcon,
@@ -99,9 +100,17 @@ export default function PrayerRequestEditor() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this prayer request? This action cannot be undone.')) {
-      return
-    }
+    const result = await Swal.fire({
+      title: 'Delete prayer request?',
+      text: 'This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626',
+      reverseButtons: true,
+    })
+    if (!result.isConfirmed) return
 
     const { error } = await supabase
       .from('prayer_requests')
