@@ -63,7 +63,6 @@ const WordMontage = () => {
           transform: `rotate(${rotation}deg)`,
           opacity: 0,
           animation: `word-flicker ${duration}s ease-in-out ${delay}s infinite`,
-          color: isSpecial ? '#991B1B' : undefined, // Red for faith, hope, love
         },
       }
     })
@@ -75,7 +74,7 @@ const WordMontage = () => {
         <div
           key={`${word}-${index}`}
           className={`absolute font-serif font-bold select-none ${
-            isSpecial ? 'text-primary' : 'text-white'
+            isSpecial ? 'text-primary-light' : 'text-white'
           }`}
           style={style}
         >
