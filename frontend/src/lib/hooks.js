@@ -26,6 +26,7 @@ export function useEvents(limit = 5) {
       .from('events')
       .select('*')
       .gte('event_date', new Date().toISOString())
+      .eq('is_cancelled', false)
       .order('event_date')
       .limit(limit)
       .then(({ data: d, error }) => {

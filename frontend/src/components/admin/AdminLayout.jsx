@@ -33,7 +33,7 @@ export default function AdminLayout({ children }) {
               to={item.to}
               className={`block px-4 py-2 rounded-lg transition-colors ${
                 location.pathname === item.to
-                  ? 'bg-primary text-secondary-dark'
+                  ? 'bg-primary text-white font-semibold'
                   : 'text-gray-300 hover:bg-gray-700'
               }`}
             >

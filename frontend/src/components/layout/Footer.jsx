@@ -23,7 +23,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <img
-                src="/images/redCross.png"
+                src="/images/accent_fh_cross.png"
                 alt=""
                 className="h-12 w-auto object-contain"
                 onError={(e) => { e.target.style.display = 'none' }}

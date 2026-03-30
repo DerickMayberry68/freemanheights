@@ -30,19 +30,19 @@ export default function BibleVerseDisplay() {
 
   return (
     <div
-      className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20 max-w-3xl px-6"
+      className="bg-primary-dark py-6 px-4"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       <div
-        className={`bg-black/30 backdrop-blur-sm rounded-lg px-6 py-4 shadow-2xl transition-opacity duration-1000 ${
+        className={`max-w-3xl mx-auto text-center transition-opacity duration-1000 ${
           fadeIn ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <p className="text-white font-serif italic text-lg md:text-xl text-center leading-relaxed mb-2">
+        <p className="text-white/90 font-serif italic text-lg md:text-xl leading-relaxed mb-2">
           &quot;{currentVerse.verse_text}&quot;
         </p>
-        <p className="text-white/80 text-sm md:text-base text-center font-semibold">
+        <p className="text-white/60 text-sm md:text-base font-semibold">
           — {currentVerse.reference}
         </p>
       </div>

@@ -28,7 +28,7 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img
-              src="/images/redCross.png"
+              src="/images/accent_fh_cross.png"
               alt=""
               className="h-11 w-auto object-contain"
               onError={(e) => { e.target.style.display = 'none' }}
@@ -49,7 +49,7 @@ export default function Header() {
                   to={link.to}
                   className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
-                      ? 'text-primary bg-primary-50'
+                      ? 'text-accent bg-amber-50 font-semibold'
                       : 'text-secondary hover:text-primary hover:bg-primary-50/50'
                   }`}
                 >

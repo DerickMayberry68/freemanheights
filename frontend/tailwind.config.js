@@ -8,10 +8,10 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#991B1B', // Deep burgundy red
-          dark: '#7F1D1D',
-          light: '#DC2626',
-          50: '#FEF2F2',
+          DEFAULT: '#1e3a8a', // Royal blue (logo banner)
+          dark: '#0f2057',    // Deep navy (logo vignette)
+          light: '#2563eb',   // Cobalt blue (logo cross glow)
+          50: '#eff6ff',      // Very light blue
         },
         secondary: {
           DEFAULT: '#64748B',
@@ -19,8 +19,8 @@ export default {
           light: '#94A3B8',
         },
         accent: {
-          DEFAULT: '#B91C1C',
-          warm: '#DC2626',
+          DEFAULT: '#ca8a04', // Gold (logo sparkles)
+          warm: '#eab308',
         },
         cream: {
           DEFAULT: '#F8FAFC',

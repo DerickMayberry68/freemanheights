@@ -163,7 +163,7 @@ export default function EventCalendar() {
         {/* Legend */}
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#D4A84B' }}></div>
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#1e3a8a' }}></div>
             <span className="text-secondary-dark">Church Events</span>
           </div>
           <div className="flex items-center gap-2">
@@ -226,6 +226,14 @@ export default function EventCalendar() {
               </button>
             </div>
             <div className="p-5 space-y-3">
+              {selectedEvent.is_cancelled && (
+                <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2">
+                  <p className="text-sm font-semibold text-red-700">This event has been cancelled</p>
+                  {selectedEvent.cancellation_note && (
+                    <p className="text-sm text-red-600 mt-0.5">{selectedEvent.cancellation_note}</p>
+                  )}
+                </div>
+              )}
               <div className="flex items-start gap-3">
                 <ClockIcon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <div>

@@ -42,19 +42,17 @@ ALTER TABLE events
   ADD COLUMN cancellation_note TEXT,
   ADD COLUMN is_overridden     BOOLEAN NOT NULL DEFAULT false;
 
--- Prevent duplicate generated occurrences for the same series + date
-CREATE UNIQUE INDEX events_series_date_idx
-  ON events (series_id, event_date)
-  WHERE series_id IS NOT NULL;
 
 -- ============================================================
 -- Site settings defaults
 -- ============================================================
-INSERT INTO site_settings (key, value) VALUES ('recurring_window_days', '90')
-  ON CONFLICT (key) DO NOTHING;
+INSERT INTO site_settings (key, value)
+  SELECT 'recurring_window_days', '90'
+  WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE key = 'recurring_window_days');
 
-INSERT INTO site_settings (key, value) VALUES ('church_timezone', 'America/Chicago')
-  ON CONFLICT (key) DO NOTHING;
+INSERT INTO site_settings (key, value)
+  SELECT 'church_timezone', 'America/Chicago'
+  WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE key = 'church_timezone');
 
 -- ============================================================
 -- generate_series_occurrences(p_series_id, p_window_end)
@@ -129,16 +127,20 @@ BEGIN
                      ELSE NULL
                    END;
 
-    INSERT INTO events (
-      series_id, title, description, event_date, end_date,
-      location, image_url, is_featured, is_cancelled, is_overridden
-    ) VALUES (
-      p_series_id, v_series.title, v_series.description,
-      v_evt_start, v_evt_end,
-      v_series.location, v_series.image_url, v_series.is_featured,
-      false, false
-    )
-    ON CONFLICT (series_id, event_date) WHERE series_id IS NOT NULL DO NOTHING;
+    IF NOT EXISTS (
+      SELECT 1 FROM events
+       WHERE series_id = p_series_id AND event_date = v_evt_start
+    ) THEN
+      INSERT INTO events (
+        series_id, title, description, event_date, end_date,
+        location, image_url, is_featured, is_cancelled, is_overridden
+      ) VALUES (
+        p_series_id, v_series.title, v_series.description,
+        v_evt_start, v_evt_end,
+        v_series.location, v_series.image_url, v_series.is_featured,
+        false, false
+      );
+    END IF;
 
     v_count := v_count + 1;
 

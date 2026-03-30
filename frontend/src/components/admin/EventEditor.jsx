@@ -128,7 +128,7 @@ export default function EventEditor() {
     loadEvents()
     loadSeries()
     // Silently extend the rolling window each time the editor loads
-    supabase.rpc('refresh_all_series').catch(() => {})
+    supabase.rpc('refresh_all_series').then(() => {}, () => {})
   }, [])
 
   // Escape key closes whichever modal is open
