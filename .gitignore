@@ -9,3 +9,10 @@ supabase/.temp/
 
 .DS_Store
 nul
+
+# Flutter ephemeral directories and generated plugin files (auto-generated, rebuilt by CI/CD)
+**/ephemeral/
+**/generated_plugin_registrant.cc
+**/generated_plugin_registrant.h
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.swift
