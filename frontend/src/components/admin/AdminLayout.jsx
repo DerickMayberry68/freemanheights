@@ -22,7 +22,7 @@ export default function AdminLayout({ children }) {
   return (
     <div className="flex min-h-[60vh]">
       <aside className="w-64 bg-secondary-dark text-white p-6 flex flex-col">
-        <h2 className="text-lg font-bold text-primary mb-6">Admin</h2>
+        <h2 className="text-lg font-bold text-white mb-6">Admin</h2>
         {user?.email && (
           <p className="text-xs text-gray-400 mb-4 truncate" title={user.email}>{user.email}</p>
         )}
