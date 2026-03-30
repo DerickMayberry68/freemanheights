@@ -18,22 +18,32 @@ export function useServiceTimes() {
   return { data, loading }
 }
 
-export function useEvents(limit = 5) {
+export function useEvents(limit = 5, options = {}) {
+  const { includeCancelled = false, fromStartOfDay = false } = options
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   useEffect(() => {
-    supabase
+    const windowStart = new Date()
+    if (fromStartOfDay) {
+      windowStart.setHours(0, 0, 0, 0)
+    }
+
+    let query = supabase
       .from('events')
       .select('*')
-      .gte('event_date', new Date().toISOString())
-      .eq('is_cancelled', false)
+      .gte('event_date', windowStart.toISOString())
       .order('event_date')
       .limit(limit)
-      .then(({ data: d, error }) => {
+
+    if (!includeCancelled) {
+      query = query.eq('is_cancelled', false)
+    }
+
+    query.then(({ data: d, error }) => {
         setData(d || [])
         setLoading(false)
       })
-  }, [limit])
+  }, [fromStartOfDay, includeCancelled, limit])
   return { data, loading }
 }
 

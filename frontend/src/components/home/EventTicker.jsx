@@ -4,7 +4,10 @@ import { format } from 'date-fns'
 import { CalendarDaysIcon } from '@heroicons/react/24/outline'
 
 export default function EventTicker() {
-  const { data: events, loading } = useEvents(5)
+  const { data: events, loading } = useEvents(5, {
+    includeCancelled: true,
+    fromStartOfDay: true,
+  })
 
   if (loading || events.length === 0) return null
 
@@ -25,7 +28,12 @@ export default function EventTicker() {
               to="/calendar"
               className="inline-flex items-center gap-2 px-8 text-sm text-white/80 hover:text-white transition-colors shrink-0"
             >
-              <span className="font-medium text-white/95">{event.title}</span>
+              <span className="font-medium text-white/95">
+                {event.title}
+                {event.is_cancelled && (
+                  <span className="ml-1 text-red-300">(Cancelled)</span>
+                )}
+              </span>
               <span className="text-primary-light text-xs">
                 {format(new Date(event.event_date), 'EEE, MMM d')}
               </span>
