@@ -285,6 +285,12 @@ export default function PrayerRequestEditor() {
                     {request.birthday && (
                       <span>Age: {request.age}</span>
                     )}
+                    {(request.recipient_display_name || request.recipient_label) && (
+                      <span>
+                        Sent to: {request.recipient_display_name || request.recipient_label}
+                        {request.recipient_title ? ` (${request.recipient_title})` : ''}
+                      </span>
+                    )}
                     <span>Received: {formatDate(request.created_at)}</span>
                   </div>
                 </div>
