@@ -19,7 +19,6 @@ export default function HeroSection() {
       {/* Word Montage */}
       <WordMontage />
 
-
       {/* Logo — centered in hero */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center -translate-y-[50px]">
         <img

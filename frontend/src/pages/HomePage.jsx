@@ -1,5 +1,6 @@
 import HeroSection from '../components/home/HeroSection'
 import EventTicker from '../components/home/EventTicker'
+import BibleVerseDisplay from '../components/home/BibleVerseDisplay'
 import ServiceTimes from '../components/home/ServiceTimes'
 import PrayerRequestSection from '../components/prayer/PrayerRequestSection'
 import UpcomingEvents from '../components/home/UpcomingEvents'
@@ -10,6 +11,7 @@ export default function HomePage() {
     <>
       <HeroSection />
       <EventTicker />
+      <BibleVerseDisplay />
       <ServiceTimes />
       <PrayerRequestSection backgroundColor="bg-cream" />
       <UpcomingEvents />

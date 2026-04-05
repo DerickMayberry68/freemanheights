@@ -1,51 +1,79 @@
 import { useState, useEffect } from 'react'
 import { useBibleVerses } from '../../lib/hooks'
 
+/** Shown when Supabase has no rows or env is not configured (mock client returns []). */
+const FALLBACK_VERSES = [
+  {
+    verse_text:
+      'I can do all this through him who gives me strength.',
+    reference: 'Philippians 4:13',
+  },
+]
+
 export default function BibleVerseDisplay() {
   const { data: verses, loading } = useBibleVerses()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [fadeIn, setFadeIn] = useState(true)
 
+  const displayVerses = verses.length > 0 ? verses : FALLBACK_VERSES
+
   // Auto-rotate verses
   useEffect(() => {
-    if (verses.length === 0 || isPaused) return
+    if (displayVerses.length === 0 || isPaused) return
 
     const intervalId = setInterval(() => {
       setFadeIn(false)
 
-      // After fade out, change verse and fade in
       setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % verses.length)
+        setCurrentIndex((prev) => (prev + 1) % displayVerses.length)
         setFadeIn(true)
-      }, 1000) // 1 second fade transition
-    }, 8000) // 8 seconds total (7s display + 1s transition)
+      }, 1000)
+    }, 8000)
 
     return () => clearInterval(intervalId)
-  }, [verses, isPaused])
+  }, [displayVerses.length, isPaused])
 
-  if (loading || verses.length === 0) return null
+  useEffect(() => {
+    setCurrentIndex(0)
+  }, [verses])
 
-  const currentVerse = verses[currentIndex]
+  if (loading) {
+    return (
+      <section className="bg-cream border-y border-primary/10 py-14" aria-label="Scripture">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <div className="rounded-xl border border-primary/10 bg-white/90 px-6 py-8 shadow-sm md:px-10 md:py-10 animate-pulse">
+            <div className="mx-auto h-24 max-w-2xl rounded bg-secondary-dark/10" />
+            <div className="mx-auto mt-4 h-5 w-40 rounded bg-primary/20" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  const currentVerse = displayVerses[currentIndex]
 
   return (
-    <div
-      className="bg-primary-dark py-6 px-4"
+    <section
+      className="bg-cream border-y border-primary/10 py-14"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      aria-label="Scripture"
     >
-      <div
-        className={`max-w-3xl mx-auto text-center transition-opacity duration-1000 ${
-          fadeIn ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <p className="text-white/90 font-serif italic text-lg md:text-xl leading-relaxed mb-2">
-          &quot;{currentVerse.verse_text}&quot;
-        </p>
-        <p className="text-white/60 text-sm md:text-base font-semibold">
-          — {currentVerse.reference}
-        </p>
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <div
+          className={`rounded-xl border border-primary/10 bg-white/90 px-6 py-8 shadow-sm transition-opacity duration-1000 md:px-10 md:py-10 ${
+            fadeIn ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <p className="text-center font-serif text-lg italic leading-relaxed text-secondary-dark md:text-xl">
+            &quot;{currentVerse.verse_text}&quot;
+          </p>
+          <p className="mt-4 text-center text-sm font-semibold text-primary md:text-base">
+            — {currentVerse.reference}
+          </p>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }
