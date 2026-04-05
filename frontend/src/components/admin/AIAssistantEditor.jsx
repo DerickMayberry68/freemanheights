@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { PencilIcon, TrashIcon, XMarkIcon, BookmarkIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { PencilIcon, TrashIcon, XMarkIcon, BookmarkIcon, SparklesIcon, PlusCircleIcon } from '@heroicons/react/24/outline'
 import { callClaudeAssistant, saveFavorite, getFavorites, updateFavorite, deleteFavorite } from '../../lib/claudeApi'
 import { useBibleTranslations } from '../../lib/hooks'
 import { fetchBibleVerse, parseBibleReference } from '../../lib/bibleApi'
@@ -46,6 +46,11 @@ export default function AIAssistantEditor() {
   const [editingFavorite, setEditingFavorite] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
+  // Add to Rotation
+  const [selectedRefs, setSelectedRefs] = useState(new Set())
+  const [addingToRotation, setAddingToRotation] = useState(false)
+  const [rotationResults, setRotationResults] = useState({})
+
   // Translation Comparison
   const [selectedTranslations, setSelectedTranslations] = useState(['ESV', 'NIV', 'KJV', 'NLT'])
   const [comparisonResults, setComparisonResults] = useState([])
@@ -74,6 +79,28 @@ export default function AIAssistantEditor() {
     loadUserPreference()
   }, [user])
 
+  // Restore last bible search from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('fh_ai_bible_search')
+      if (saved) {
+        const { query: savedQuery, response: savedResponse } = JSON.parse(saved)
+        setQuery(savedQuery || '')
+        setResponse(savedResponse || null)
+        setLastResponse(savedResponse || null)
+        setActiveTab('bible_search')
+      }
+    } catch {
+      // ignore corrupt data
+    }
+  }, [])
+
+  // Reset rotation state when response changes
+  useEffect(() => {
+    setSelectedRefs(new Set())
+    setRotationResults({})
+  }, [response])
+
   // Load favorites when switching to Saved tab
   useEffect(() => {
     if (activeTab === 'saved') {
@@ -94,30 +121,107 @@ export default function AIAssistantEditor() {
     }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!query.trim()) return
+  const handleToggleRef = (ref) => {
+    setSelectedRefs(prev => {
+      const next = new Set(prev)
+      if (next.has(ref)) next.delete(ref)
+      else next.add(ref)
+      return next
+    })
+  }
 
-    // Handle translation comparison separately
-    if (activeTab === 'compare_translations') {
-      return handleCompareTranslations()
+  const handleSelectAll = (extractedRefs) => {
+    if (selectedRefs.size === extractedRefs.length) {
+      setSelectedRefs(new Set())
+    } else {
+      setSelectedRefs(new Set(extractedRefs))
+    }
+  }
+
+  const handleAddToRotation = async (extractedRefs) => {
+    if (selectedRefs.size === 0) return
+    setAddingToRotation(true)
+
+    const { count } = await supabase
+      .from('bible_verses')
+      .select('*', { count: 'exact', head: true })
+    const orderBase = count || 0
+
+    const refsToAdd = extractedRefs.filter(r => selectedRefs.has(r))
+    let addedCount = 0
+    let errorCount = 0
+
+    for (let i = 0; i < refsToAdd.length; i++) {
+      const ref = refsToAdd[i]
+      setRotationResults(prev => ({ ...prev, [ref]: 'adding' }))
+      try {
+        const parsed = parseBibleReference(ref)
+        if (!parsed) throw new Error('Could not parse reference')
+
+        const verseText = await fetchBibleVerse({
+          book: parsed.book,
+          chapter: parsed.chapter,
+          verseStart: parsed.verse_start,
+          verseEnd: parsed.verse_end,
+          translation,
+        })
+        if (!verseText) throw new Error('No verse text returned')
+
+        const { error: insertErr } = await supabase.from('bible_verses').insert({
+          verse_text: verseText,
+          reference: ref,
+          book: parsed.book,
+          chapter: parsed.chapter,
+          verse_start: parsed.verse_start,
+          verse_end: parsed.verse_end || null,
+          category: null,
+          translation,
+          display_order: orderBase + i,
+          is_active: true,
+        })
+        if (insertErr) throw insertErr
+
+        setRotationResults(prev => ({ ...prev, [ref]: 'added' }))
+        addedCount++
+      } catch (err) {
+        console.error(`Failed to add ${ref}:`, err)
+        setRotationResults(prev => ({ ...prev, [ref]: 'error' }))
+        errorCount++
+      }
     }
 
+    setAddingToRotation(false)
+
+    if (addedCount > 0 && errorCount === 0) {
+      toast.success(`${addedCount} verse${addedCount !== 1 ? 's' : ''} added to rotation!`)
+    } else if (addedCount > 0) {
+      toast.success(`${addedCount} added, ${errorCount} failed — check failed items`)
+    } else {
+      toast.error('Failed to add verses to rotation')
+    }
+  }
+
+  const LS_KEY = 'fh_ai_bible_search'
+
+  const runSearch = async (searchQuery, searchTab, searchTranslation) => {
     setLoading(true)
     setError(null)
     setResponse(null)
 
     try {
-      const result = await callClaudeAssistant(query, activeTab, translation)
+      const result = await callClaudeAssistant(searchQuery, searchTab, searchTranslation)
 
       if (result.success) {
         const responseData = {
           text: result.response,
           queryType: result.queryType,
-          query: query
+          query: searchQuery,
         }
         setResponse(responseData)
-        setLastResponse(responseData) // Save for tab switching
+        setLastResponse(responseData)
+        if (searchTab === 'bible_search') {
+          localStorage.setItem(LS_KEY, JSON.stringify({ query: searchQuery, response: responseData }))
+        }
       } else {
         setError(result.error || 'Failed to get response')
         toast.error(result.error || 'Failed to get response')
@@ -127,6 +231,25 @@ export default function AIAssistantEditor() {
       toast.error(err.message || 'An error occurred')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!query.trim()) return
+
+    // Handle translation comparison separately
+    if (activeTab === 'compare_translations') {
+      return handleCompareTranslations()
+    }
+
+    runSearch(query, activeTab, translation)
+  }
+
+  const handleTranslationChange = (newTranslation) => {
+    setTranslation(newTranslation)
+    if (response && activeTab === 'bible_search' && query.trim()) {
+      runSearch(query, 'bible_search', newTranslation)
     }
   }
 
@@ -363,7 +486,7 @@ export default function AIAssistantEditor() {
                 </label>
                 <select
                   value={translation}
-                  onChange={(e) => setTranslation(e.target.value)}
+                  onChange={(e) => handleTranslationChange(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary"
                   disabled={loading || translationsLoading}
                 >
@@ -432,25 +555,105 @@ export default function AIAssistantEditor() {
           )}
 
           {/* Response Display */}
-          {response && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-secondary-dark">Response</h3>
-                <button
-                  onClick={openSaveModal}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary font-medium rounded-lg hover:bg-primary-100 transition-colors"
-                >
-                  <BookmarkIcon className="h-5 w-5" />
-                  Save to Favorites
-                </button>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div className="prose prose-sm max-w-none whitespace-pre-wrap text-secondary-dark">
-                  {response.text}
+          {response && (() => {
+            const isBibleSearch = activeTab === 'bible_search'
+            const extractedRefs = isBibleSearch ? extractVerseReferences(response.text) : []
+            const allSelected = extractedRefs.length > 0 && selectedRefs.size === extractedRefs.length
+
+            const renderLineWithBold = (text) =>
+              text.split(/\*\*([^*]+)\*\*/).map((part, i) =>
+                i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+              )
+
+return (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-secondary-dark">Response</h3>
+                  <button
+                    onClick={openSaveModal}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary font-medium rounded-lg hover:bg-primary-100 transition-colors"
+                  >
+                    <BookmarkIcon className="h-5 w-5" />
+                    Save to Favorites
+                  </button>
                 </div>
+
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  {isBibleSearch ? (
+                    <div className="space-y-1 text-sm text-secondary-dark">
+                      {response.text.split('\n').map((line, i) => {
+                        const refMatch = line.match(/\*\*([^*]+\d+:\d+(?:-\d+)?)\*\*/)
+                        const ref = refMatch ? refMatch[1] : null
+                        const status = ref ? rotationResults[ref] : null
+
+                        if (ref) {
+                          return (
+                            <div key={i} className="flex items-baseline gap-3 py-0.5">
+                              <span className="flex-1 leading-relaxed">{renderLineWithBold(line)}</span>
+                              <label className={`flex items-center gap-1.5 shrink-0 cursor-pointer ${status === 'added' ? 'opacity-50' : ''}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedRefs.has(ref)}
+                                  onChange={() => handleToggleRef(ref)}
+                                  disabled={addingToRotation || status === 'added'}
+                                  className="rounded border-gray-300"
+                                />
+                                {status === 'adding' && <span className="text-xs text-primary animate-pulse">Fetching...</span>}
+                                {status === 'added' && <span className="text-xs text-green-600 font-medium">Added ✓</span>}
+                                {status === 'error' && <span className="text-xs text-red-600 font-medium">Failed</span>}
+                                {!status && <span className="text-xs text-primary">Add to Rotation</span>}
+                              </label>
+                            </div>
+                          )
+                        }
+                        return (
+                          <div key={i} className="leading-relaxed">
+                            {renderLineWithBold(line) || <>&nbsp;</>}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="prose prose-sm max-w-none whitespace-pre-wrap text-secondary-dark">
+                      {response.text}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action bar — Bible Search only */}
+                {isBibleSearch && extractedRefs.length > 0 && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectAll(extractedRefs)}
+                      disabled={addingToRotation}
+                      className="text-sm text-primary hover:underline disabled:opacity-50"
+                    >
+                      {allSelected ? 'Deselect All' : 'Select All'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddToRotation(extractedRefs)}
+                      disabled={addingToRotation || selectedRefs.size === 0}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {addingToRotation ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <PlusCircleIcon className="h-4 w-4" />
+                          Add {selectedRefs.size > 0 ? `${selectedRefs.size} ` : ''}Selected to Rotation
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* Translation Comparison Results */}
           {activeTab === 'compare_translations' && comparisonResults.length > 0 && (
