@@ -7,7 +7,7 @@ import { supabase } from './supabase'
  * @param {string} translation - Bible translation to use (ESV, NIV, KJV, etc.)
  * @returns {Promise<Object>} Response object with success flag and data/error
  */
-export async function callClaudeAssistant(query, queryType, translation = 'ESV') {
+export async function callClaudeAssistant(query, queryType, translation = 'ESV', model = 'claude-sonnet-4-6') {
   try {
     // Get current session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
@@ -24,6 +24,7 @@ export async function callClaudeAssistant(query, queryType, translation = 'ESV')
         query: query.trim(),
         queryType,
         translation,
+        model,
         maxTokens: 2048
       }
     })

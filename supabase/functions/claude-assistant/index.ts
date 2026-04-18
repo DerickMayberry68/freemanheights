@@ -38,10 +38,20 @@ const getSystemPrompts = (translation: string) => ({
 6. Keep tone pastoral, practical, and encouraging`
 })
 
+const ALLOWED_MODELS: Record<string, string> = {
+  'claude-sonnet-4-6':          'Claude Sonnet 4.6',
+  'claude-opus-4-6':            'Claude Opus 4.6',
+  'claude-haiku-4-5-20251001':  'Claude Haiku 4.5',
+  'claude-sonnet-4-5-20250929': 'Claude Sonnet 4.5',
+}
+
+const DEFAULT_MODEL = 'claude-sonnet-4-6'
+
 interface RequestBody {
   query: string
   queryType: 'bible_search' | 'cross_reference' | 'verse_context' | 'sermon_ideas'
   translation?: string
+  model?: string
   maxTokens?: number
 }
 
@@ -60,7 +70,8 @@ serve(async (req) => {
     console.log('Request received for AI assistant')
 
     // Parse request body
-    const { query, queryType, translation = 'ESV', maxTokens = 2048 } = await req.json() as RequestBody
+    const { query, queryType, translation = 'ESV', model, maxTokens = 2048 } = await req.json() as RequestBody
+    const resolvedModel = (model && ALLOWED_MODELS[model]) ? model : DEFAULT_MODEL
 
     if (!query || !queryType) {
       throw new Error('Missing required fields: query and queryType')
@@ -85,7 +96,7 @@ serve(async (req) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
+        model: resolvedModel,
         max_tokens: maxTokens,
         system: SYSTEM_PROMPTS[queryType],
         messages: [{ role: 'user', content: query }]

@@ -7,6 +7,15 @@ import { fetchBibleVerse, parseBibleReference } from '../../lib/bibleApi'
 import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
 
+const CLAUDE_MODELS = [
+  { id: 'claude-sonnet-4-6',          label: 'Claude Sonnet 4.6' },
+  { id: 'claude-opus-4-6',            label: 'Claude Opus 4.6' },
+  { id: 'claude-haiku-4-5-20251001',  label: 'Claude Haiku 4.5' },
+  { id: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5' },
+]
+
+const LS_MODEL_KEY = 'fh_ai_model'
+
 const TABS = [
   { id: 'bible_search', label: 'Bible Search', icon: SparklesIcon },
   { id: 'cross_reference', label: 'Cross-References', icon: BookmarkIcon },
@@ -30,6 +39,7 @@ export default function AIAssistantEditor() {
   const [activeTab, setActiveTab] = useState('bible_search')
   const [query, setQuery] = useState('')
   const [translation, setTranslation] = useState('ESV')
+  const [model, setModel] = useState(() => localStorage.getItem(LS_MODEL_KEY) || 'claude-sonnet-4-6')
   const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState(null)
   const [error, setError] = useState(null)
@@ -203,13 +213,13 @@ export default function AIAssistantEditor() {
 
   const LS_KEY = 'fh_ai_bible_search'
 
-  const runSearch = async (searchQuery, searchTab, searchTranslation) => {
+  const runSearch = async (searchQuery, searchTab, searchTranslation, searchModel) => {
     setLoading(true)
     setError(null)
     setResponse(null)
 
     try {
-      const result = await callClaudeAssistant(searchQuery, searchTab, searchTranslation)
+      const result = await callClaudeAssistant(searchQuery, searchTab, searchTranslation, searchModel)
 
       if (result.success) {
         const responseData = {
@@ -243,13 +253,21 @@ export default function AIAssistantEditor() {
       return handleCompareTranslations()
     }
 
-    runSearch(query, activeTab, translation)
+    runSearch(query, activeTab, translation, model)
   }
 
   const handleTranslationChange = (newTranslation) => {
     setTranslation(newTranslation)
     if (response && activeTab === 'bible_search' && query.trim()) {
-      runSearch(query, 'bible_search', newTranslation)
+      runSearch(query, 'bible_search', newTranslation, model)
+    }
+  }
+
+  const handleModelChange = (newModel) => {
+    setModel(newModel)
+    localStorage.setItem(LS_MODEL_KEY, newModel)
+    if (response && activeTab === 'bible_search' && query.trim()) {
+      runSearch(query, 'bible_search', translation, newModel)
     }
   }
 
@@ -480,24 +498,41 @@ export default function AIAssistantEditor() {
                 </p>
               </div>
             ) : (
-              <div>
-                <label className="block text-sm font-medium text-secondary-dark mb-2">
-                  Bible Translation
-                </label>
-                <select
-                  value={translation}
-                  onChange={(e) => handleTranslationChange(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary"
-                  disabled={loading || translationsLoading}
-                >
-                  {translationsLoading ? (
-                    <option>Loading translations...</option>
-                  ) : (
-                    translations.map(t => (
-                      <option key={t.code} value={t.code}>{t.code} - {t.name}</option>
-                    ))
-                  )}
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-dark mb-2">
+                    Bible Translation
+                  </label>
+                  <select
+                    value={translation}
+                    onChange={(e) => handleTranslationChange(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary"
+                    disabled={loading || translationsLoading}
+                  >
+                    {translationsLoading ? (
+                      <option>Loading translations...</option>
+                    ) : (
+                      translations.map(t => (
+                        <option key={t.code} value={t.code}>{t.code} - {t.name}</option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-dark mb-2">
+                    Claude Model
+                  </label>
+                  <select
+                    value={model}
+                    onChange={(e) => handleModelChange(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary"
+                    disabled={loading}
+                  >
+                    {CLAUDE_MODELS.map(m => (
+                      <option key={m.id} value={m.id}>{m.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
 
