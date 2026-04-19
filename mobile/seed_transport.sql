@@ -1,12 +1,21 @@
 -- =============================================================================
--- Freeman Heights — Transport Test Data Seed
--- Run in Supabase SQL Editor. Safe to re-run (ON CONFLICT DO NOTHING).
--- Uses your existing auth user as the bus driver.
+-- Freeman Heights — Transport / bus manifest test data
+--
+-- Prereqs:
+--   1. Run mobile/migration_transport.sql on this database (if not already).
+--   2. Edit v_driver_email below to the SAME email you use to sign into the app.
+--
+-- Run the whole file in Supabase SQL Editor. Inserts are idempotent where possible.
+-- The block at the bottom moves the test event to "today" 6:30 PM America/Chicago
+-- so TransportRepository.getTodaysEventBuses() keeps finding it.
+--
+-- No DB? Flip TransportRepository.useMockData = true in the Flutter app for UI-only tests.
 -- =============================================================================
 
 DO $$
 DECLARE
   v_church_id   UUID := '00000000-0000-0000-0000-000000000001';
+  v_driver_email TEXT := 'CHANGE_ME@example.com';  -- <<< your Supabase login email
   v_user_id     UUID;
   v_bus1_id     UUID := '00000000-0000-0000-0000-000000000010';
   v_bus2_id     UUID := '00000000-0000-0000-0000-000000000011';
@@ -33,13 +42,24 @@ DECLARE
   v_today TIMESTAMPTZ;
 
 BEGIN
-  -- Get the logged-in user (your account)
-  SELECT id INTO v_user_id FROM auth.users LIMIT 1;
-  v_today := date_trunc('day', NOW()) + interval '18 hours 30 minutes';
+  IF v_driver_email = 'CHANGE_ME@example.com' THEN
+    RAISE EXCEPTION 'Edit v_driver_email in this script to your real auth.users email (same as mobile login).';
+  END IF;
+
+  SELECT id INTO v_user_id FROM auth.users WHERE email = lower(trim(v_driver_email)) LIMIT 1;
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'No auth.users row for email %. Sign up once in the app or Admin first.', v_driver_email;
+  END IF;
+
+  -- Today 6:30 PM local (Central — Berryville, AR). Interprets wall clock in Chicago, stores as timestamptz.
+  v_today := (
+    date_trunc('day', current_timestamp AT TIME ZONE 'America/Chicago')
+    + interval '18 hours 30 minutes'
+  ) AT TIME ZONE 'America/Chicago';
 
   -- ── Member profile for the staff user ─────────────────────────────────────
   INSERT INTO public.member_profiles (id, church_id, first_name, last_name, is_active)
-  VALUES (v_user_id, v_church_id, 'Derick', 'Mayberry', TRUE)
+  VALUES (v_user_id, v_church_id, 'Transport', 'Staff', TRUE)
   ON CONFLICT (id) DO NOTHING;
 
   -- ── Transport staff roles ──────────────────────────────────────────────────
@@ -118,23 +138,30 @@ BEGIN
     (c6, v_church_id, 'Elijah', 'Smith',    '2014-04-14', TRUE)
   ON CONFLICT (id) DO NOTHING;
 
-  -- ── Medical alerts ────────────────────────────────────────────────────────
-  -- Noah: critical peanut allergy
+  -- ── Medical alerts (idempotent — no unique constraint on this table) ─────
   INSERT INTO public.child_medical_alerts (child_id, alert_type_id, severity, description, action_required, is_active)
-  VALUES (c2, 1, 3, 'Severe peanut allergy', 'EpiPen in backpack — administer immediately and call 911', TRUE)
-  ON CONFLICT DO NOTHING;
+  SELECT c2, 1, 3, 'Severe peanut allergy (TEST)', 'EpiPen in backpack — administer immediately and call 911', TRUE
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.child_medical_alerts a WHERE a.child_id = c2 AND a.description LIKE 'Severe peanut allergy%'
+  );
 
-  -- Elijah: asthma + bee sting
   INSERT INTO public.child_medical_alerts (child_id, alert_type_id, severity, description, action_required, is_active)
-  VALUES
-    (c6, 3, 2, 'Asthma', 'Inhaler in left side pocket of backpack', TRUE),
-    (c6, 1, 3, 'Bee sting allergy', 'EpiPen in backpack — administer immediately and call 911', TRUE)
-  ON CONFLICT DO NOTHING;
+  SELECT c6, 3, 2, 'Asthma (TEST)', 'Inhaler in left side pocket of backpack', TRUE
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.child_medical_alerts a WHERE a.child_id = c6 AND a.description = 'Asthma (TEST)'
+  );
 
-  -- Olivia: dietary
   INSERT INTO public.child_medical_alerts (child_id, alert_type_id, severity, description, action_required, is_active)
-  VALUES (c3, 4, 1, 'Lactose intolerant', 'Avoid dairy products', TRUE)
-  ON CONFLICT DO NOTHING;
+  SELECT c6, 1, 3, 'Bee sting allergy (TEST)', 'EpiPen in backpack — administer immediately and call 911', TRUE
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.child_medical_alerts a WHERE a.child_id = c6 AND a.description LIKE 'Bee sting allergy%'
+  );
+
+  INSERT INTO public.child_medical_alerts (child_id, alert_type_id, severity, description, action_required, is_active)
+  SELECT c3, 4, 1, 'Lactose intolerant (TEST)', 'Avoid dairy products', TRUE
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.child_medical_alerts a WHERE a.child_id = c3 AND a.description LIKE 'Lactose intolerant%'
+  );
 
   -- ── Event registrations ───────────────────────────────────────────────────
   -- status_id 2 = Approved
@@ -160,5 +187,37 @@ BEGIN
     (r6, v_eb1_id, 6)
   ON CONFLICT (event_registration_id) DO NOTHING;
 
-  RAISE NOTICE 'Seed complete. User ID used: %', v_user_id;
+  RAISE NOTICE 'Seed complete. Driver user_id: % (email: %)', v_user_id, v_driver_email;
 END $$;
+
+-- -----------------------------------------------------------------------------
+-- Keep the fixed test event on "today" in Central Time whenever you re-run this file
+-- (inserts above no-op on conflict, but the app only loads today's events).
+-- -----------------------------------------------------------------------------
+UPDATE public.events e
+SET
+  event_date = (
+    date_trunc('day', current_timestamp AT TIME ZONE 'America/Chicago')
+    + interval '18 hours 30 minutes'
+  ) AT TIME ZONE 'America/Chicago',
+  end_date = (
+    date_trunc('day', current_timestamp AT TIME ZONE 'America/Chicago')
+    + interval '20 hours 30 minutes'
+  ) AT TIME ZONE 'America/Chicago'
+WHERE e.id = '00000000-0000-0000-0000-000000000020';
+
+UPDATE public.event_buses eb
+SET
+  departure_time = e.event_date - interval '30 minutes',
+  estimated_return = e.event_date + interval '2 hours 30 minutes'
+FROM public.events e
+WHERE eb.event_id = e.id AND e.id = '00000000-0000-0000-0000-000000000020';
+
+UPDATE public.route_stops rs
+SET scheduled_time = CASE rs.stop_order
+  WHEN 1 THEN (SELECT event_date - interval '30 minutes' FROM public.events WHERE id = '00000000-0000-0000-0000-000000000020')
+  WHEN 2 THEN (SELECT event_date - interval '15 minutes' FROM public.events WHERE id = '00000000-0000-0000-0000-000000000020')
+  WHEN 3 THEN (SELECT event_date FROM public.events WHERE id = '00000000-0000-0000-0000-000000000020')
+  ELSE rs.scheduled_time
+END
+WHERE rs.event_bus_id = '00000000-0000-0000-0000-000000000030';

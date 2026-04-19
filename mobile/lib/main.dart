@@ -60,13 +60,17 @@ class AppShell extends StatelessWidget {
     return StreamBuilder<AuthState>(
       stream: supabase.auth.onAuthStateChange,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        // Wait only until the first auth event; then use stream session (source of truth after sign-in).
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        final session = supabase.auth.currentSession;
+        final session = snapshot.hasData
+            ? snapshot.data!.session
+            : supabase.auth.currentSession;
+
         if (session == null) {
           return const LoginScreen();
         }

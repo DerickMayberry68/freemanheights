@@ -192,7 +192,7 @@ export default function EventCalendar() {
           startAccessor="start"
           endAccessor="end"
           style={{ minHeight: 900, height: '80vh' }}
-          views={['month', 'agenda']}
+          views={['month', 'week', 'day', 'agenda']}
           view={currentView}
           date={currentDate}
           onNavigate={handleNavigate}

@@ -25,6 +25,18 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  String _mapAuthMessage(String raw) {
+    final m = raw.toLowerCase();
+    if (m.contains('email not confirmed')) {
+      return 'Verify your email first. Check inbox/spam for a message from Supabase, then try again.';
+    }
+    if (m.contains('invalid login credentials')) {
+      return 'Invalid email or password. Supabase uses your account email (not a separate username). '
+          'Use the same email as the website admin login.';
+    }
+    return raw.isEmpty ? 'Sign in failed. Try again.' : raw;
+  }
+
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -38,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Auth state change in main.dart AppShell handles navigation
     } on AuthException catch (e) {
       debugPrint('AuthException: ${e.message}');
-      if (mounted) _showError(e.message);
+      if (mounted) _showError(_mapAuthMessage(e.message));
     } catch (e) {
       debugPrint('Login error: $e');
       if (mounted) _showError(e.toString());
@@ -107,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Email
+                        // Supabase password auth uses email — same as website /admin login.
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -115,6 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           autocorrect: false,
                           decoration: const InputDecoration(
                             labelText: 'Email',
+                            helperText: 'Same email as the website admin account',
                             prefixIcon: Icon(Icons.email_outlined),
                             border: OutlineInputBorder(),
                           ),

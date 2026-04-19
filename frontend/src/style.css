@@ -46,6 +46,15 @@
 .freeman-calendar .rbc-toolbar button.rbc-active {
   @apply bg-primary text-white border-primary;
 }
+.freeman-calendar .rbc-toolbar {
+  @apply gap-3;
+}
+.freeman-calendar .rbc-toolbar-label {
+  @apply font-serif text-xl text-secondary-dark;
+}
+.freeman-calendar .rbc-btn-group {
+  @apply flex flex-wrap gap-2;
+}
 .freeman-calendar .rbc-today {
   @apply bg-primary-50;
 }
@@ -62,4 +71,18 @@
 }
 .freeman-calendar .rbc-off-range-bg {
   @apply bg-cream-dark/50;
+}
+
+@media (max-width: 768px) {
+  .freeman-calendar .rbc-toolbar {
+    @apply flex-col items-stretch;
+  }
+
+  .freeman-calendar .rbc-toolbar-label {
+    @apply order-first text-center;
+  }
+
+  .freeman-calendar .rbc-toolbar .rbc-btn-group {
+    @apply justify-center;
+  }
 }
