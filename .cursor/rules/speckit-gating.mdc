@@ -1,0 +1,42 @@
+---
+description: Require the speckit flow (specify → plan → tasks → checklist → implement) before any file edit
+alwaysApply: true
+---
+
+# Speckit Gating
+
+**Do not edit, create, delete, or move any file in this repo until ALL of these speckit phases have been completed for the current task, in order:**
+
+1. `speckit.specify`
+2. `speckit.plan`
+3. `speckit.tasks`
+4. `speckit.checklist`
+5. `speckit.implement`
+
+No exceptions for typos, formatting, comments, renames, or "tiny" fixes. The repo's canonical version of this policy lives in `CLAUDE.md`; this rule mirrors it for Cursor.
+
+## Allowed without speckit
+- Read-only investigation: Read, Grep, Glob, Semantic Search, file open.
+- Explaining or summarizing code, answering questions.
+- Non-mutating shell commands: `git status`, `git diff`, `git log`, `npm ls`, `dart analyze`, `flutter doctor`, etc.
+- Editing **only `CLAUDE.md` or this rule file** when the user explicitly asks to update the working agreement.
+
+## Forbidden without speckit
+- Any `Write`, `StrReplace`, `EditNotebook`, `Delete`, file move/rename.
+- `git add` / `git commit` / `git push` of agent-authored changes; popping a stash that contains them.
+- Mutating commands: `flutter build`, `npm run build` for release, `supabase db push`, `vercel deploy`, anything that changes the database, deploys, or rewrites branch state.
+- Auto-fixing lint/format outside the active speckit task scope.
+
+## Phase exit criteria (short)
+- **specify** — agreed problem, desired behavior, non-goals, affected flows.
+- **plan** — chosen approach with rationale, files touched, risks, test strategy.
+- **tasks** — ordered ≤1-hour tasks, each with file(s) + acceptance signal.
+- **checklist** — clean branch, env vars present, migrations/seed ready, lint/types green, backout plan.
+- **implement** — only approved tasks; rerun lints/analyzers; summarize what changed and what was intentionally not changed; commit only on user request.
+
+## If asked to "just edit" something
+Reply with something like:
+
+> Per the speckit gating rule, I can't edit files until we complete the speckit phases. Want me to start with `speckit.specify` for this change?
+
+Then drive the user through the phases. Do **not** "preview the diff" by writing to disk.
