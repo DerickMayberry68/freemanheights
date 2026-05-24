@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
-import { useBibleTranslations } from '../../lib/hooks'
+import { normalizeBibleVerseRotationSeconds, useBibleTranslations } from '../../lib/hooks'
 import { fetchBibleVerse, isTranslationSupported, parseBibleReference } from '../../lib/bibleApi'
 import { toast } from 'react-toastify'
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -30,6 +30,9 @@ export default function BibleVerseEditor() {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [sorting, setSorting] = useState([])
   const [fetchingVerse, setFetchingVerse] = useState(false)
+  const [rotationSeconds, setRotationSeconds] = useState(8)
+  const [rotationInput, setRotationInput] = useState('8')
+  const [rotationSaving, setRotationSaving] = useState(false)
   const { data: translations, loading: translationsLoading } = useBibleTranslations()
   const modalRef = useRef(null)
 
@@ -143,6 +146,22 @@ export default function BibleVerseEditor() {
 
   useEffect(() => {
     loadVerses()
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'bible_verse_rotation_seconds')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return
+        const seconds = normalizeBibleVerseRotationSeconds(data?.value)
+        setRotationSeconds(seconds)
+        setRotationInput(String(seconds))
+      })
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
@@ -311,6 +330,35 @@ export default function BibleVerseEditor() {
     }
   }
 
+  const handleSaveRotationSeconds = async () => {
+    const nextSeconds = normalizeBibleVerseRotationSeconds(rotationInput)
+    setRotationSaving(true)
+    setError(null)
+    try {
+      const { data: updated, error: updateError } = await supabase
+        .from('site_settings')
+        .update({ value: String(nextSeconds) })
+        .eq('key', 'bible_verse_rotation_seconds')
+        .select('key')
+      if (updateError) throw updateError
+
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from('site_settings')
+          .insert({ key: 'bible_verse_rotation_seconds', value: String(nextSeconds) })
+        if (insertError) throw insertError
+      }
+
+      setRotationSeconds(nextSeconds)
+      setRotationInput(String(nextSeconds))
+      toast.success('Verse rotation duration saved.')
+    } catch (err) {
+      setError(err.message || 'Failed to save verse rotation duration.')
+    } finally {
+      setRotationSaving(false)
+    }
+  }
+
   const handleDelete = async (id) => {
     setSaving(true)
     setError(null)
@@ -344,6 +392,38 @@ export default function BibleVerseEditor() {
           <PlusIcon className="h-5 w-5" />
           Add verse
         </button>
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-6 mb-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h3 className="font-semibold text-secondary-dark">Rotation duration</h3>
+            <p className="text-sm text-secondary-light mt-1">
+              Set how long each verse stays visible on the home page.
+            </p>
+          </div>
+          <div className="flex items-end gap-3">
+            <label className="block">
+              <span className="block text-sm font-medium text-secondary-dark mb-1">Seconds</span>
+              <input
+                type="number"
+                min="3"
+                max="60"
+                value={rotationInput}
+                onChange={(e) => setRotationInput(e.target.value)}
+                className="w-28 rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={handleSaveRotationSeconds}
+              disabled={rotationSaving || Number.parseInt(rotationInput, 10) === rotationSeconds}
+              className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
+            >
+              {rotationSaving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {error && !formOpen && deleteConfirm === null && (

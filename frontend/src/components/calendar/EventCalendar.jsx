@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
-import { format, parse, startOfWeek, getDay } from 'date-fns'
+import { addDays, format, parse, startOfWeek, getDay } from 'date-fns'
 import { enUS } from 'date-fns/locale'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
@@ -76,15 +76,19 @@ export default function EventCalendar() {
 
     const holidays = getHolidaysInRange(start, end)
     const holidayEvents = holidays.map((holiday) => ({
-      id: `holiday-${holiday.date.getTime()}`,
+      id: `holiday-${holiday.type}-${holiday.date.getTime()}-${holiday.name}`,
       title: holiday.name,
       start: holiday.date,
-      end: holiday.date,
+      end: holiday.endDate && holiday.endDate > holiday.date
+        ? addDays(holiday.endDate, 1)
+        : holiday.date,
+      allDay: true,
       resource: {
         isHoliday: true,
         holidayType: holiday.type,
         title: holiday.name,
         event_date: holiday.date.toISOString(),
+        end_date: holiday.endDate?.toISOString(),
       },
     }))
 
@@ -116,6 +120,8 @@ export default function EventCalendar() {
     } else if (event.resource?.isHoliday) {
       if (event.resource.holidayType === 'christian') {
         backgroundColor = '#8B5CF6'
+      } else if (event.resource.holidayType === 'sbc') {
+        backgroundColor = '#0F766E'
       } else {
         backgroundColor = '#3B82F6'
       }
@@ -167,8 +173,12 @@ export default function EventCalendar() {
             <span className="text-secondary-dark">Church Events</span>
           </div>
           <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#0F766E' }}></div>
+            <span className="text-secondary-dark">SBC Observances</span>
+          </div>
+          <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded" style={{ backgroundColor: '#8B5CF6' }}></div>
-            <span className="text-secondary-dark">Christian Holidays</span>
+            <span className="text-secondary-dark">Core Christian Holidays</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3B82F6' }}></div>
@@ -215,9 +225,15 @@ export default function EventCalendar() {
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     selectedEvent.holidayType === 'christian'
                       ? 'bg-purple-100 text-purple-700'
+                      : selectedEvent.holidayType === 'sbc'
+                        ? 'bg-teal-100 text-teal-700'
                       : 'bg-blue-100 text-blue-700'
                   }`}>
-                    {selectedEvent.holidayType === 'christian' ? 'Christian' : 'National'}
+                    {selectedEvent.holidayType === 'christian'
+                      ? 'Core Christian'
+                      : selectedEvent.holidayType === 'sbc'
+                        ? 'SBC Observance'
+                        : 'National'}
                   </span>
                 )}
               </div>
@@ -238,7 +254,9 @@ export default function EventCalendar() {
                 <ClockIcon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-secondary-dark">
-                    {format(new Date(selectedEvent.event_date), 'EEEE, MMMM d, yyyy')}
+                    {selectedEvent.isHoliday && selectedEvent.end_date && selectedEvent.end_date !== selectedEvent.event_date
+                      ? `${format(new Date(selectedEvent.event_date), 'MMMM d')} - ${format(new Date(selectedEvent.end_date), 'MMMM d, yyyy')}`
+                      : format(new Date(selectedEvent.event_date), 'EEEE, MMMM d, yyyy')}
                   </p>
                   {!selectedEvent.isHoliday && (
                     <p className="text-sm text-secondary-light">

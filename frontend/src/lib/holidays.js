@@ -1,5 +1,6 @@
 /**
- * Holiday utilities for calculating US national holidays and Christian holidays
+ * Holiday utilities for calculating US national holidays, core Christian holidays,
+ * and Southern Baptist Convention observances.
  */
 
 /**
@@ -52,10 +53,123 @@ function getNthWeekdayOfMonth(year, month, weekday, n) {
   }
 }
 
+function addDays(date, days) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+function makeDate(year, month, day) {
+  return new Date(year, month - 1, day)
+}
+
+const SBC_OBSERVANCES_BY_YEAR = {
+  2026: [
+    ['January Bible Study Week', 1, 4, 1, 11],
+    ['Sanctity of Life Sunday', 1, 18],
+    ['George Liele Church Planting, Evangelism, and Missions Sunday', 2, 1],
+    ['Focus on WMU Sunday', 2, 15],
+    ['Racial Reconciliation Sunday', 2, 22],
+    ['Week of Prayer for North American Missions and Annie Armstrong Easter Offering', 3, 1, 3, 8],
+    ['Church Planting Emphasis Day', 3, 22],
+    ['Baptism Sunday', 4, 12],
+    ['SBC Seminary Sunday', 5, 3],
+    ['National Day of Prayer', 5, 7],
+    ["Children's Ministry Sunday", 5, 17],
+    ['Disaster Relief Sunday', 5, 31],
+    ['Crossover Orlando', 6, 6],
+    ['WMU Missions Celebration', 6, 7, 6, 8],
+    ['SBC Annual Meeting (Orlando, FL)', 6, 9, 6, 10],
+    ['Mission:Dignity Sunday', 6, 28],
+    ['Religious Liberty Sunday', 7, 5],
+    ['Send Relief Sunday', 8, 2],
+    ['SBC Serve Sunday', 8, 9],
+    ['Global Hunger Sunday', 8, 23],
+    ["Children's Missions Day", 9, 19],
+    ['Caring Well Sunday', 9, 27],
+    ['CP Sunday', 10, 4],
+    ['Day of Prayer for Associational Missions', 10, 18],
+    ['Student Baptism Sunday', 10, 25],
+    ['Day of Prayer for Persecuted Church', 11, 1],
+    ['Orphans & Widows Sunday', 11, 8],
+    ['Week of Prayer for International Missions and Lottie Moon Christmas Offering', 11, 29, 12, 6],
+  ],
+  2027: [
+    ['January Bible Study Week', 1, 3, 1, 10],
+    ['Sanctity of Life Sunday', 1, 17],
+    ['George Liele Church Planting, Evangelism, and Missions Sunday', 2, 7],
+    ['Focus on WMU Sunday', 2, 21],
+    ['Racial Reconciliation Sunday', 2, 28],
+    ['Week of Prayer for North American Missions and Annie Armstrong Easter Offering', 3, 7, 3, 14],
+    ['Church Planting Emphasis Day', 3, 14],
+    ['Baptism Sunday', 4, 4],
+    ['SBC Seminary Sunday', 5, 2],
+    ['National Day of Prayer', 5, 6],
+    ["Children's Ministry Sunday", 5, 16],
+    ['Disaster Relief Sunday', 5, 30],
+    ['Crossover Indianapolis', 6, 12],
+    ['WMU Missions Celebration', 6, 13, 6, 14],
+    ['SBC Annual Meeting (Indianapolis, IN)', 6, 15, 6, 16],
+    ['Mission:Dignity Sunday', 6, 27],
+    ['Religious Liberty Sunday', 7, 4],
+    ['Disability Ministry Sunday', 7, 11],
+    ['Send Relief Sunday', 8, 1],
+    ['SBC Serve Sunday', 8, 8],
+    ['Global Hunger Sunday', 8, 22],
+    ["Children's Missions Day", 9, 18],
+    ['Caring Well Sunday', 9, 26],
+    ['CP Sunday', 10, 3],
+    ['Day of Prayer for Associational Missions', 10, 17],
+    ['Student Baptism Sunday', 10, 24],
+    ['Day of Prayer for the Persecuted Church', 11, 7],
+    ['Orphans & Widows Sunday', 11, 14],
+    ['Week of Prayer for International Missions and Lottie Moon Christmas Offering', 11, 28, 12, 5],
+  ],
+  2028: [
+    ['January Bible Study Week', 1, 2, 1, 9],
+    ['Sanctity of Life Sunday', 1, 23],
+    ['George Liele Church Planting, Evangelism, and Missions Sunday', 2, 6],
+    ['Focus on WMU Sunday', 2, 20],
+    ['Racial Reconciliation Sunday', 2, 27],
+    ['Week of Prayer for North American Missions and Annie Armstrong Easter Offering', 3, 5, 3, 12],
+    ['Church Planting Emphasis Day', 3, 19],
+    ['Baptism Sunday', 4, 23],
+    ['National Day of Prayer', 5, 4],
+    ['SBC Seminary Sunday', 5, 7],
+    ["Children's Ministry Sunday", 5, 21],
+    ['Disaster Relief Sunday', 6, 4],
+    ['Crossover St. Louis', 6, 10],
+    ['WMU Missions Celebration', 6, 11, 6, 12],
+    ['SBC Annual Meeting (St. Louis, MO)', 6, 13, 6, 14],
+    ['Mission:Dignity Sunday', 6, 25],
+    ['Religious Liberty Sunday', 7, 2],
+    ['Disability Ministry Sunday', 7, 9],
+    ['Send Relief Sunday', 8, 6],
+    ['SBC Serve Sunday', 8, 13],
+    ['Global Hunger Sunday', 8, 27],
+    ["Children's Missions Day", 9, 16],
+    ['Caring Well Sunday', 9, 24],
+    ['CP Sunday', 10, 1],
+    ['Day of Prayer for Associational Missions', 10, 22],
+    ['Student Baptism Sunday', 10, 29],
+    ['Day of Prayer for Persecuted Church', 11, 5],
+    ['Orphans & Widows Sunday', 11, 12],
+    ['Week of Prayer for International Missions and Lottie Moon Christmas Offering', 12, 3, 12, 10],
+  ],
+}
+
+function getSbcObservancesForYear(year) {
+  return (SBC_OBSERVANCES_BY_YEAR[year] || []).map(([name, startMonth, startDay, endMonth, endDay]) => {
+    const date = makeDate(year, startMonth, startDay)
+    const endDate = endMonth && endDay ? makeDate(year, endMonth, endDay) : date
+    return { name, date, endDate, type: 'sbc' }
+  })
+}
+
 /**
  * Get all holidays for a given year
  * @param {number} year
- * @returns {Array<{name: string, date: Date, type: 'national' | 'christian'}>}
+ * @returns {Array<{name: string, date: Date, endDate?: Date, type: 'national' | 'christian' | 'sbc'}>}
  */
 export function getHolidaysForYear(year) {
   const holidays = []
@@ -96,23 +210,13 @@ export function getHolidaysForYear(year) {
   })
   holidays.push({ name: "Christmas Day", date: new Date(year, 11, 25), type: 'national' })
 
-  // Christian Holidays
+  // Core Christian holidays commonly recognized in Baptist churches
   const easter = calculateEaster(year)
-
-  // Ash Wednesday (46 days before Easter)
-  const ashWednesday = new Date(easter)
-  ashWednesday.setDate(easter.getDate() - 46)
-  holidays.push({ name: "Ash Wednesday", date: ashWednesday, type: 'christian' })
 
   // Palm Sunday (7 days before Easter)
   const palmSunday = new Date(easter)
   palmSunday.setDate(easter.getDate() - 7)
   holidays.push({ name: "Palm Sunday", date: palmSunday, type: 'christian' })
-
-  // Maundy Thursday (3 days before Easter)
-  const maundyThursday = new Date(easter)
-  maundyThursday.setDate(easter.getDate() - 3)
-  holidays.push({ name: "Maundy Thursday", date: maundyThursday, type: 'christian' })
 
   // Good Friday (2 days before Easter)
   const goodFriday = new Date(easter)
@@ -122,41 +226,13 @@ export function getHolidaysForYear(year) {
   // Easter Sunday
   holidays.push({ name: "Easter Sunday", date: easter, type: 'christian' })
 
-  // Ascension Day (39 days after Easter)
-  const ascension = new Date(easter)
-  ascension.setDate(easter.getDate() + 39)
-  holidays.push({ name: "Ascension Day", date: ascension, type: 'christian' })
-
-  // Pentecost Sunday (49 days after Easter)
-  const pentecost = new Date(easter)
-  pentecost.setDate(easter.getDate() + 49)
-  holidays.push({ name: "Pentecost Sunday", date: pentecost, type: 'christian' })
-
-  // Trinity Sunday (56 days after Easter)
-  const trinitySunday = new Date(easter)
-  trinitySunday.setDate(easter.getDate() + 56)
-  holidays.push({ name: "Trinity Sunday", date: trinitySunday, type: 'christian' })
-
-  // Fixed Christian Holidays
-  holidays.push({ name: "Epiphany", date: new Date(year, 0, 6), type: 'christian' })
-  holidays.push({
-    name: "All Saints' Day",
-    date: new Date(year, 10, 1),
-    type: 'christian'
-  })
-
-  // Advent Sundays (4 Sundays before Christmas)
-  const christmas = new Date(year, 11, 25)
-  const christmasDay = christmas.getDay()
-  const daysToFirstAdvent = christmasDay === 0 ? 28 : (christmasDay + 21)
-  const firstAdvent = new Date(year, 11, 25 - daysToFirstAdvent)
-  holidays.push({ name: "First Sunday of Advent", date: firstAdvent, type: 'christian' })
-
   // Christmas Eve
   holidays.push({ name: "Christmas Eve", date: new Date(year, 11, 24), type: 'christian' })
 
   // New Year's Eve
   holidays.push({ name: "New Year's Eve", date: new Date(year, 11, 31), type: 'national' })
+
+  holidays.push(...getSbcObservancesForYear(year))
 
   return holidays
 }
@@ -165,7 +241,7 @@ export function getHolidaysForYear(year) {
  * Get holidays for a date range
  * @param {Date} startDate
  * @param {Date} endDate
- * @returns {Array<{name: string, date: Date, type: 'national' | 'christian'}>}
+ * @returns {Array<{name: string, date: Date, endDate?: Date, type: 'national' | 'christian' | 'sbc'}>}
  */
 export function getHolidaysInRange(startDate, endDate) {
   const startYear = startDate.getFullYear()
@@ -176,5 +252,5 @@ export function getHolidaysInRange(startDate, endDate) {
     holidays.push(...getHolidaysForYear(year))
   }
 
-  return holidays.filter(h => h.date >= startDate && h.date <= endDate)
+  return holidays.filter(h => h.date <= endDate && (h.endDate || h.date) >= startDate)
 }

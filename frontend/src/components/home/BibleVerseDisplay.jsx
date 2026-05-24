@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useBibleVerses } from '../../lib/hooks'
+import { useBibleVerseRotationSeconds, useBibleVerses } from '../../lib/hooks'
 
 /** Shown when Supabase has no rows or env is not configured (mock client returns []). */
 const FALLBACK_VERSES = [
@@ -12,6 +12,7 @@ const FALLBACK_VERSES = [
 
 export default function BibleVerseDisplay() {
   const { data: verses, loading } = useBibleVerses()
+  const { seconds: rotationSeconds } = useBibleVerseRotationSeconds()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [fadeIn, setFadeIn] = useState(true)
@@ -29,10 +30,10 @@ export default function BibleVerseDisplay() {
         setCurrentIndex((prev) => (prev + 1) % displayVerses.length)
         setFadeIn(true)
       }, 1000)
-    }, 8000)
+    }, rotationSeconds * 1000)
 
     return () => clearInterval(intervalId)
-  }, [displayVerses.length, isPaused])
+  }, [displayVerses.length, isPaused, rotationSeconds])
 
   useEffect(() => {
     setCurrentIndex(0)

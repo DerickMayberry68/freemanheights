@@ -1,6 +1,22 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 
+const BIBLE_VERSE_ROTATION_DEFAULT_SECONDS = 8
+const BIBLE_VERSE_ROTATION_MIN_SECONDS = 3
+const BIBLE_VERSE_ROTATION_MAX_SECONDS = 60
+
+export function normalizeBibleVerseRotationSeconds(value) {
+  const seconds = Number.parseInt(value, 10)
+  if (
+    Number.isNaN(seconds) ||
+    seconds < BIBLE_VERSE_ROTATION_MIN_SECONDS ||
+    seconds > BIBLE_VERSE_ROTATION_MAX_SECONDS
+  ) {
+    return BIBLE_VERSE_ROTATION_DEFAULT_SECONDS
+  }
+  return seconds
+}
+
 export function useServiceTimes() {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
@@ -113,6 +129,25 @@ export function useBibleVerses() {
       })
   }, [])
   return { data, loading }
+}
+
+export function useBibleVerseRotationSeconds() {
+  const [seconds, setSeconds] = useState(BIBLE_VERSE_ROTATION_DEFAULT_SECONDS)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'bible_verse_rotation_seconds')
+      .maybeSingle()
+      .then(({ data }) => {
+        setSeconds(normalizeBibleVerseRotationSeconds(data?.value))
+        setLoading(false)
+      })
+  }, [])
+
+  return { seconds, loading }
 }
 
 export function useBibleTranslations() {
