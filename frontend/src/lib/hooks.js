@@ -35,7 +35,7 @@ export function useServiceTimes() {
 }
 
 export function useEvents(limit = 5, options = {}) {
-  const { includeCancelled = false, fromStartOfDay = false } = options
+  const { includeCancelled = false, fromStartOfDay = false, daysAhead = null } = options
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   useEffect(() => {
@@ -43,6 +43,9 @@ export function useEvents(limit = 5, options = {}) {
     if (fromStartOfDay) {
       windowStart.setHours(0, 0, 0, 0)
     }
+    const windowEnd = Number.isFinite(daysAhead)
+      ? new Date(windowStart.getTime() + daysAhead * 24 * 60 * 60 * 1000)
+      : null
 
     let query = supabase
       .from('events')
@@ -50,6 +53,10 @@ export function useEvents(limit = 5, options = {}) {
       .gte('event_date', windowStart.toISOString())
       .order('event_date')
       .limit(limit)
+
+    if (windowEnd) {
+      query = query.lt('event_date', windowEnd.toISOString())
+    }
 
     if (!includeCancelled) {
       query = query.eq('is_cancelled', false)
@@ -59,7 +66,7 @@ export function useEvents(limit = 5, options = {}) {
         setData(d || [])
         setLoading(false)
       })
-  }, [fromStartOfDay, includeCancelled, limit])
+  }, [daysAhead, fromStartOfDay, includeCancelled, limit])
   return { data, loading }
 }
 

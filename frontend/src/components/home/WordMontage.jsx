@@ -30,13 +30,29 @@ const WORDS = [
   'Alive in Christ'
 ]
 
+const HERITAGE_WORDS = [
+  'Shalom',
+  'Adonai',
+  'Torah',
+  'Hesed',
+  'Emunah',
+  'Shema',
+  'שלום',
+  'חסד',
+  'אמת',
+  'אדני'
+]
+
 const WordMontage = () => {
   // Generate random positions and styles for each word
   const wordStyles = useMemo(() => {
-    return WORDS.map((word, index) => {
+    return [...WORDS, ...HERITAGE_WORDS].map((word, index) => {
       const isSpecial = ['faith', 'hope', 'love'].includes(word.toLowerCase())
+      const isHeritage = index >= WORDS.length
       const fontSize = isSpecial
         ? Math.random() * 2 + 4 // 4rem to 6rem for faith, hope, love
+        : isHeritage
+          ? Math.random() * 2 + 2.25 // 2.25rem to 4.25rem for heritage accents
         : Math.random() * 2 + 1.5 // 1.5rem to 3.5rem for others
 
       // Position words everywhere except center (avoid logo area)
@@ -56,6 +72,7 @@ const WordMontage = () => {
       return {
         word,
         isSpecial,
+        isHeritage,
         style: {
           fontSize: `${fontSize}rem`,
           top: `${top}%`,
@@ -70,11 +87,15 @@ const WordMontage = () => {
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {wordStyles.map(({ word, isSpecial, style }, index) => (
+      {wordStyles.map(({ word, isSpecial, isHeritage, style }, index) => (
         <div
           key={`${word}-${index}`}
           className={`absolute font-serif font-bold select-none ${
-            isSpecial ? 'text-primary-light' : 'text-white'
+            isSpecial
+              ? 'text-primary-light'
+              : isHeritage
+                ? 'text-primary-light/80'
+                : 'text-white'
           }`}
           style={style}
         >
