@@ -8,7 +8,6 @@ const adminNav = [
   { to: '/admin/approvals', label: 'Approvals' },
   { to: '/admin/events', label: 'Events' },
   { to: '/admin/sermons', label: 'Sermons' },
-  { to: '/admin/record', label: 'Record Livestream' },
   { to: '/admin/ministries', label: 'Ministries' },
   { to: '/admin/staff', label: 'Staff' },
   { to: '/admin/bible-verses', label: 'Bible Verses' },

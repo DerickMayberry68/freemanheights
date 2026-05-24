@@ -7,7 +7,6 @@ import StaffEditor from '../../components/admin/StaffEditor'
 import BibleVerseEditor from '../../components/admin/BibleVerseEditor'
 import AIAssistantEditor from '../../components/admin/AIAssistantEditor'
 import ApprovalsEditor from '../../components/admin/ApprovalsEditor'
-import RecordLivestream from '../../components/admin/RecordLivestream'
 import UserProfileEditor from '../../components/admin/UserProfileEditor'
 import PrayerRequestEditor from '../../components/admin/PrayerRequestEditor'
 
@@ -34,10 +33,21 @@ function AdminHome() {
           <p className="text-sm text-secondary-light mt-1">Manage sermon archive</p>
           <Link to="/admin/sermons" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Sermons →</Link>
         </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Record Livestream</h3>
-          <p className="text-sm text-secondary-light mt-1">Record with camera and save to the database</p>
-          <Link to="/admin/record" className="text-primary font-medium mt-2 inline-block hover:underline">Record →</Link>
+        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-100 p-6 opacity-75 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-semibold text-secondary-dark">Record Livestream</h3>
+            <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Coming soon
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-secondary-light">Recording management is disabled until this feature is ready.</p>
+          <button
+            type="button"
+            disabled
+            className="mt-3 inline-block cursor-not-allowed rounded-lg bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-500"
+          >
+            Unavailable
+          </button>
         </div>
         <div className="bg-white rounded-xl shadow p-6">
           <h3 className="font-semibold text-secondary-dark">Ministries</h3>
@@ -74,6 +84,18 @@ function AdminHome() {
   )
 }
 
+function FeatureUnavailable() {
+  return (
+    <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center shadow-sm">
+      <p className="text-sm font-semibold uppercase tracking-wide text-primary">Coming soon</p>
+      <h2 className="mt-2 text-2xl font-bold text-secondary-dark">Record Livestream is disabled</h2>
+      <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-secondary-light">
+        This management area is not available until the recording workflow is finished.
+      </p>
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   return (
     <AdminLayout>
@@ -86,7 +108,7 @@ export default function AdminDashboard() {
         <Route path="staff" element={<StaffEditor />} />
         <Route path="bible-verses" element={<BibleVerseEditor />} />
         <Route path="ai-assistant" element={<AIAssistantEditor />} />
-        <Route path="record" element={<RecordLivestream />} />
+        <Route path="record" element={<FeatureUnavailable />} />
         <Route path="profile" element={<UserProfileEditor />} />
         <Route path="prayer-requests" element={<PrayerRequestEditor />} />
       </Routes>
