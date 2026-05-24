@@ -31,14 +31,32 @@ INSERT INTO events (title, description, event_date, location, is_featured) VALUE
 ('AWANA Awards Night', 'Celebrating another year of Scripture memory', NOW() + INTERVAL '21 days', '522 Freeman Street, Berryville, AR', false),
 ('Easter Sunday Service', 'Celebrate the resurrection with us! Special music and breakfast.', NOW() + INTERVAL '60 days', '522 Freeman Street, Berryville, AR', true);
 
--- Sermons (video_url: add real YouTube links in Admin → Sermons when available)
+-- Sermons
 INSERT INTO sermons (title, speaker, sermon_date, scripture_reference, description, video_url, is_featured) VALUES
-('Welcome to Freeman Heights', 'Pastor', CURRENT_DATE - INTERVAL '7 days', 'Matthew 28:19-20', 'Introduction to our church family and mission.', NULL, true),
-('Walking in Faith', 'Pastor', CURRENT_DATE - INTERVAL '14 days', 'Hebrews 11:1-6', 'What it means to live by faith in uncertain times.', NULL, true),
-('The Good Shepherd', 'Pastor', CURRENT_DATE - INTERVAL '21 days', 'John 10:1-18', 'Jesus as our shepherd who knows and cares for His sheep.', NULL, false),
-('Love One Another', 'Mike Thompson', CURRENT_DATE - INTERVAL '28 days', '1 John 4:7-12', 'Building authentic community in the body of Christ.', NULL, false),
-('Prayer That Moves Mountains', 'Pastor', CURRENT_DATE - INTERVAL '35 days', 'Matthew 17:20-21', 'The power of persistent prayer.', NULL, false),
-('Grace and Truth', 'Pastor', CURRENT_DATE - INTERVAL '42 days', 'John 1:14-18', 'Living in the balance of grace and truth.', NULL, false);
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-05-17', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/yn627qw?&info=0', true),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-05-17', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/jmw3nf8?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-05-10', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/jqkdhm3?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-05-03', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/d89y8js?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-05-03', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/mrncgpg?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-04-26', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/wm5nwtt?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-04-26', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/y253y63?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-04-19', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/cp5cvyb?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-04-12', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/tsyswtj?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-04-05', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/9nsnkyz?&info=0', false),
+('Sunday Morning Worship Service/ Brother Marty Strough', 'Freeman Heights', DATE '2026-03-29', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/r36btfx?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-03-22', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/ptdgn3x?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-03-15', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/5gtn72b?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-03-08', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/p97jwqh?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-03-01', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/qxcg57d?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-02-22', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/7n2ys4x?&info=0', false),
+('"All that Calvary Implies must be Appropriated"', 'Freeman Heights', DATE '2026-02-15', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/mbx663v?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-02-08', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/h9tvqgw?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-02-01', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/kpwbrfk?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-01-18', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/vys6mnr?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-01-11', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/494nfhr?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2026-01-04', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/yvs6f57?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2025-12-28', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/rnjpnrh?&info=0', false),
+('Sunday Morning Worship Service', 'Freeman Heights', DATE '2025-12-21', NULL, 'Previous livestream from Freeman Heights Baptist Church.', 'https://subsplash.com/u/-GQTDCX/media/embed/d/shhwhvz?&info=0', false);
 
 -- Announcements
 INSERT INTO announcements (title, content, start_date, end_date, priority) VALUES

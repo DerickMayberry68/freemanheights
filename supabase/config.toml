@@ -14,3 +14,6 @@ enabled = true
 
 [functions.claude-assistant]
 verify_jwt = false
+
+[functions.sync-sermons]
+verify_jwt = true
