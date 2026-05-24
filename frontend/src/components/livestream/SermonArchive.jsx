@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { supabase } from '../../lib/supabase'
 import { format, parseISO } from 'date-fns'
 import { PlayIcon } from '@heroicons/react/24/solid'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { getSubsplashEmbedUrl, getYouTubeThumbnail } from '../../lib/constants'
 
 export default function SermonArchive() {
@@ -215,40 +215,171 @@ function SermonPlayerModal({ sermon, onClose }) {
 }
 
 function ArchiveModal({ open, sermons, onClose, onSelect }) {
+  const [archiveSearch, setArchiveSearch] = useState('')
+  const [sortConfig, setSortConfig] = useState({ key: 'sermon_date', direction: 'desc' })
+
+  const sortOptions = [
+    { key: 'sermon_date', label: 'Date', className: 'w-36' },
+    { key: 'title', label: 'Title', className: 'min-w-64' },
+    { key: 'speaker', label: 'Speaker', className: 'w-48' },
+    { key: 'scripture_reference', label: 'Scripture', className: 'w-44' },
+  ]
+
+  const filteredSermons = useMemo(() => {
+    const normalizedSearch = archiveSearch.trim().toLowerCase()
+
+    return sermons
+      .filter((sermon) => {
+        if (!normalizedSearch) return true
+
+        const sermonDate = sermon.sermon_date ? format(parseISO(sermon.sermon_date), 'MMMM d, yyyy') : ''
+        return [
+          sermon.title,
+          sermon.speaker || 'Freeman Heights',
+          sermon.scripture_reference,
+          sermonDate,
+        ].some((value) => String(value || '').toLowerCase().includes(normalizedSearch))
+      })
+      .sort((a, b) => {
+        const direction = sortConfig.direction === 'asc' ? 1 : -1
+        const first = getSortValue(a, sortConfig.key)
+        const second = getSortValue(b, sortConfig.key)
+
+        if (first < second) return -1 * direction
+        if (first > second) return 1 * direction
+        return 0
+      })
+  }, [archiveSearch, sermons, sortConfig])
+
+  const handleSort = (key) => {
+    setSortConfig((current) => ({
+      key,
+      direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc',
+    }))
+  }
+
+  const sortIndicator = (key) => {
+    if (sortConfig.key !== key) return '+'
+    return sortConfig.direction === 'asc' ? 'ASC' : 'DESC'
+  }
+
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
-      <div className="fixed inset-0 bg-secondary-dark/50" aria-hidden="true" />
+      <div className="fixed inset-0 bg-secondary-dark/60" aria-hidden="true" />
       <div className="fixed inset-0 overflow-y-auto p-4">
-        <div className="mx-auto flex min-h-full max-w-3xl items-center">
-          <DialogPanel className="w-full rounded-lg bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-primary/10 p-5">
+        <div className="mx-auto flex min-h-full max-w-6xl items-center">
+          <DialogPanel className="w-full overflow-hidden rounded-lg bg-white shadow-2xl">
+            <div className="flex flex-col gap-4 border-b border-primary/10 p-5 md:flex-row md:items-start md:justify-between">
               <div>
                 <DialogTitle className="font-serif text-2xl font-semibold text-secondary-dark">Complete Archive</DialogTitle>
-                <p className="mt-1 text-sm text-secondary-light">Recent Freeman Heights livestreams imported into this site.</p>
+                <p className="mt-1 text-sm text-secondary-light">
+                  {filteredSermons.length} of {sermons.length} livestreams
+                </p>
               </div>
-              <button type="button" onClick={onClose} className="rounded-lg p-2 text-secondary-light hover:bg-primary-50 hover:text-secondary-dark">
+              <button type="button" onClick={onClose} className="self-end rounded-lg p-2 text-secondary-light hover:bg-primary-50 hover:text-secondary-dark md:self-auto">
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
-            <div className="max-h-[70vh] divide-y divide-primary/10 overflow-y-auto">
-              {sermons.map((sermon) => (
-                <button
-                  key={sermon.id}
-                  type="button"
-                  onClick={() => onSelect(sermon)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left hover:bg-cream"
-                >
-                  <div>
-                    <p className="font-semibold text-secondary-dark">{sermon.title}</p>
-                    <p className="mt-1 text-sm text-secondary-light">{sermon.speaker || 'Freeman Heights'}</p>
-                  </div>
-                  <span className="shrink-0 text-sm font-medium text-primary">
-                    {format(parseISO(sermon.sermon_date), 'MMM d, yyyy')}
-                  </span>
-                </button>
-              ))}
-              {sermons.length === 0 && (
-                <p className="p-8 text-center text-secondary-light">No sermons available yet.</p>
+
+            <div className="border-b border-primary/10 bg-cream/40 p-5">
+              <label htmlFor="archive-search" className="sr-only">Search archive</label>
+              <div className="relative max-w-xl">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-secondary-light" />
+                <input
+                  id="archive-search"
+                  type="search"
+                  value={archiveSearch}
+                  onChange={(event) => setArchiveSearch(event.target.value)}
+                  placeholder="Search by title, speaker, Scripture, or date..."
+                  className="w-full rounded-lg border border-primary/20 bg-white py-3 pl-10 pr-4 text-sm shadow-sm transition-colors focus:border-primary focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+            </div>
+
+            <div className="max-h-[68vh] overflow-y-auto">
+              <div className="hidden min-w-full md:block">
+                <table className="min-w-full divide-y divide-primary/10">
+                  <thead className="sticky top-0 z-10 bg-white shadow-sm">
+                    <tr>
+                      {sortOptions.map((option) => (
+                        <th key={option.key} scope="col" className={`${option.className} px-5 py-3 text-left`}>
+                          <button
+                            type="button"
+                            onClick={() => handleSort(option.key)}
+                            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-secondary-light hover:text-primary"
+                          >
+                            {option.label}
+                            <span className="text-sm leading-none text-primary">{sortIndicator(option.key)}</span>
+                          </button>
+                        </th>
+                      ))}
+                      <th scope="col" className="w-24 px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-secondary-light">
+                        Watch
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-primary/10 bg-white">
+                    {filteredSermons.map((sermon) => (
+                      <tr key={sermon.id} className="group hover:bg-cream/70">
+                        <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-primary">
+                          {format(parseISO(sermon.sermon_date), 'MMM d, yyyy')}
+                        </td>
+                        <td className="px-5 py-4">
+                          <button
+                            type="button"
+                            onClick={() => onSelect(sermon)}
+                            className="text-left font-semibold leading-snug text-secondary-dark hover:text-primary"
+                          >
+                            {sermon.title}
+                          </button>
+                        </td>
+                        <td className="px-5 py-4 text-sm text-secondary-light">{sermon.speaker || 'Freeman Heights'}</td>
+                        <td className="px-5 py-4 text-sm text-secondary-light">{sermon.scripture_reference || '—'}</td>
+                        <td className="px-5 py-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => onSelect(sermon)}
+                            className="inline-flex items-center justify-center rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-primary-dark"
+                          >
+                            Play
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="divide-y divide-primary/10 md:hidden">
+                {filteredSermons.map((sermon) => (
+                  <button
+                    key={sermon.id}
+                    type="button"
+                    onClick={() => onSelect(sermon)}
+                    className="block w-full px-5 py-4 text-left hover:bg-cream"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-sm font-semibold text-secondary-dark">{sermon.title}</p>
+                      <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                        Play
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-secondary-light">
+                      <span>{format(parseISO(sermon.sermon_date), 'MMM d, yyyy')}</span>
+                      <span>{sermon.speaker || 'Freeman Heights'}</span>
+                      {sermon.scripture_reference && <span>{sermon.scripture_reference}</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {filteredSermons.length === 0 && (
+                <div className="px-6 py-14 text-center">
+                  <p className="font-serif text-2xl font-semibold text-secondary-dark">No sermons found</p>
+                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-secondary-light">
+                    Try a different title, speaker, Scripture, or date.
+                  </p>
+                </div>
               )}
             </div>
           </DialogPanel>
@@ -256,4 +387,9 @@ function ArchiveModal({ open, sermons, onClose, onSelect }) {
       </div>
     </Dialog>
   )
+}
+
+function getSortValue(sermon, key) {
+  if (key === 'sermon_date') return sermon.sermon_date || ''
+  return String(sermon[key] || '').toLowerCase()
 }
