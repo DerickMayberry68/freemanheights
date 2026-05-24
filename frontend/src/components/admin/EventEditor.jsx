@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import { toast } from 'react-toastify'
@@ -63,14 +64,24 @@ const emptySeriesForm = {
   series_end: '',
 }
 
+const eventRangeOptions = [
+  { value: 'upcoming', label: 'Upcoming', emptyText: 'No upcoming events. Click "Add event" to create one.' },
+  { value: 'past', label: 'Past 90 days', emptyText: 'No past events found in the last 90 days.' },
+  { value: 'all', label: 'All events', emptyText: 'No events found. Click "Add event" to create one.' },
+]
+
+const eventSelect = '*, event_series:series_id(id, title, recurrence_type, day_of_week, month_day, start_time, end_time)'
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function EventEditor() {
   const [activeTab, setActiveTab] = useState('events')
+  const [searchParams, setSearchParams] = useSearchParams()
 
   // Events list
   const [events,  setEvents]  = useState([])
   const [loading, setLoading] = useState(true)
+  const [eventRange, setEventRange] = useState('upcoming')
 
   // Series list
   const [seriesList,    setSeriesList]    = useState([])
@@ -105,14 +116,25 @@ export default function EventEditor() {
 
   const loadEvents = () => {
     setLoading(true)
-    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    supabase
+    const now = new Date()
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+    let query = supabase
       .from('events')
-      .select('*, event_series:series_id(id, title, recurrence_type, day_of_week, month_day, start_time, end_time)')
-      .gte('event_date', since)
-      .order('event_date', { ascending: true })
+      .select(eventSelect)
       .limit(300)
-      .then(({ data }) => { setEvents(data || []); setLoading(false) })
+
+    if (eventRange === 'upcoming') {
+      query = query.gte('event_date', now.toISOString()).order('event_date', { ascending: true })
+    } else if (eventRange === 'past') {
+      query = query
+        .gte('event_date', ninetyDaysAgo.toISOString())
+        .lt('event_date', now.toISOString())
+        .order('event_date', { ascending: false })
+    } else {
+      query = query.order('event_date', { ascending: false })
+    }
+
+    query.then(({ data }) => { setEvents(data || []); setLoading(false) })
   }
 
   const loadSeries = () => {
@@ -126,6 +148,9 @@ export default function EventEditor() {
 
   useEffect(() => {
     loadEvents()
+  }, [eventRange])
+
+  useEffect(() => {
     loadSeries()
     // Silently extend the rolling window each time the editor loads
     supabase.rpc('refresh_all_series').then(() => {}, () => {})
@@ -168,6 +193,34 @@ export default function EventEditor() {
     })
     setError(null); setFormOpen(true)
   }
+
+  useEffect(() => {
+    const editEventId = searchParams.get('edit')
+    if (!editEventId) return
+
+    let cancelled = false
+    supabase
+      .from('events')
+      .select(eventSelect)
+      .eq('id', editEventId)
+      .maybeSingle()
+      .then(({ data, error: fetchError }) => {
+        if (cancelled) return
+        if (fetchError || !data) {
+          toast.error('Could not find that event.')
+          return
+        }
+
+        setActiveTab('events')
+        setEvents((current) => (
+          current.some((event) => event.id === data.id) ? current : [data, ...current]
+        ))
+        openEdit(data)
+        setSearchParams({}, { replace: true })
+      })
+
+    return () => { cancelled = true }
+  }, [searchParams])
 
   const closeForm = () => {
     setFormOpen(false); setEditingId(null)
@@ -487,6 +540,7 @@ export default function EventEditor() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   })
+  const selectedEventRange = eventRangeOptions.find((option) => option.value === eventRange) || eventRangeOptions[0]
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -540,7 +594,30 @@ export default function EventEditor() {
         loading ? (
           <p className="text-secondary-light py-4">Loading events…</p>
         ) : (
-          <div className="bg-white rounded-xl shadow overflow-hidden">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-secondary-dark">Event range</p>
+                <p className="text-xs text-secondary-light">Future events show by default. Switch ranges to edit or delete past events.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {eventRangeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setEventRange(option.value)}
+                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                      eventRange === option.value
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-secondary-light hover:bg-primary-50 hover:text-secondary-dark'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 {table.getHeaderGroups().map(hg => (
@@ -579,8 +656,9 @@ export default function EventEditor() {
               </tbody>
             </table>
             {events.length === 0 && (
-              <p className="p-8 text-center text-secondary-light">No upcoming events. Click "Add event" to create one.</p>
+              <p className="p-8 text-center text-secondary-light">{selectedEventRange.emptyText}</p>
             )}
+            </div>
           </div>
         )
       )}
