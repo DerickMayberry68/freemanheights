@@ -41,8 +41,16 @@ export default function UpcomingEvents() {
               to="/calendar"
               className="block bg-white rounded-xl overflow-hidden border border-primary/10 hover:border-primary/30 hover:shadow-md transition-all group"
             >
-              <div className="aspect-video bg-primary-50 flex items-center justify-center">
-                <CalendarIcon className="h-14 w-14 text-primary/40 group-hover:text-primary/60 transition-colors" />
+              <div className="aspect-video bg-primary-50 flex items-center justify-center overflow-hidden">
+                {event.image_url ? (
+                  <img
+                    src={event.image_url}
+                    alt={event.title}
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <CalendarIcon className="h-14 w-14 text-primary/40 group-hover:text-primary/60 transition-colors" />
+                )}
               </div>
               <div className="p-5">
                 <p className="text-sm text-primary font-medium">
