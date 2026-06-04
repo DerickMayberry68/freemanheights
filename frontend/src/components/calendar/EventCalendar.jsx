@@ -230,7 +230,16 @@ export default function EventCalendar() {
 
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-dark/30 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setSelectedEvent(null) }}>
-          <div className="bg-white rounded-xl border border-primary/10 max-w-md w-full" role="dialog" aria-modal="true" aria-label="Event details">
+          <div className="bg-white rounded-xl border border-primary/10 max-w-lg w-full overflow-hidden" role="dialog" aria-modal="true" aria-label="Event details">
+            {selectedEvent.image_url && (
+              <div className="aspect-video bg-primary-50">
+                <img
+                  src={selectedEvent.image_url}
+                  alt={selectedEvent.title}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
             <div className="flex items-center justify-between p-5 border-b border-primary/10">
               <div className="flex items-center gap-3">
                 <h3 className="text-lg font-serif font-semibold text-secondary-dark">{selectedEvent.title}</h3>
