@@ -19,19 +19,19 @@ export default function EventTicker() {
 
       <div className="relative flex-1 overflow-hidden flex items-center">
         {loading && (
-          <div className="px-6 text-sm text-white/50 animate-pulse">Loading events…</div>
+          <div className="px-6 text-sm text-white/50 animate-pulse">Loading events...</div>
         )}
         {!loading && events.length === 0 && (
           <Link
             to="/calendar"
             className="px-6 text-sm text-white/85 hover:text-white transition-colors"
           >
-            View our calendar for upcoming services and activities →
+            View our calendar for upcoming services and activities -&gt;
           </Link>
         )}
         {!loading && events.length > 0 && (
           <div className="absolute inset-y-0 flex items-center animate-ticker whitespace-nowrap">
-            {events.map((event) => (
+            {events.map((event, index) => (
               <Link
                 key={event.id}
                 to="/calendar"
@@ -46,7 +46,9 @@ export default function EventTicker() {
                 <span className="text-primary-light text-xs">
                   {format(new Date(event.event_date), 'EEE, MMM d')}
                 </span>
-                <span className="text-white/30 mx-4">•</span>
+                {index < events.length - 1 && (
+                  <span className="text-white/30 mx-4">{'\u2022'}</span>
+                )}
               </Link>
             ))}
           </div>
