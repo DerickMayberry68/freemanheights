@@ -7,7 +7,7 @@ export default function EventTicker() {
   const { data: events, loading } = useEvents(5, {
     includeCancelled: true,
     fromStartOfDay: true,
-    daysAhead: 7,
+    daysAhead: 30,
   })
 
   return (
