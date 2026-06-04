@@ -30,11 +30,11 @@ export default function EventTicker() {
           </Link>
         )}
         {!loading && events.length > 0 && (
-          <div className="absolute inset-y-0 flex items-center animate-ticker whitespace-nowrap">
+          <div className="absolute inset-y-0 flex items-center animate-ticker whitespace-nowrap hover:[animation-play-state:paused]">
             {events.map((event, index) => (
               <Link
                 key={event.id}
-                to="/calendar"
+                to={`/calendar?event=${event.id}`}
                 className="inline-flex items-center gap-2 px-8 text-sm text-white/80 hover:text-white transition-colors shrink-0"
               >
                 <span className="font-medium text-white/95">

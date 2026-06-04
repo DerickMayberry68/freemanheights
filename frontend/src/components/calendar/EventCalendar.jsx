@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
 import { addDays, format, parse, startOfWeek, getDay } from 'date-fns'
 import { enUS } from 'date-fns/locale'
@@ -35,7 +36,9 @@ export default function EventCalendar() {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [currentView, setCurrentView] = useState('month')
+  const [searchParams] = useSearchParams()
   const { approved } = useAuth()
+  const selectedEventId = searchParams.get('event')
 
   useEffect(() => {
     const start = new Date()
@@ -66,6 +69,16 @@ export default function EventCalendar() {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [selectedEvent])
+
+  useEffect(() => {
+    if (loading || !selectedEventId) return
+
+    const matchedEvent = events.find((event) => event.id === selectedEventId)
+    if (!matchedEvent) return
+
+    setCurrentDate(matchedEvent.start)
+    setSelectedEvent(matchedEvent.resource)
+  }, [events, loading, selectedEventId])
 
   // Combine events with holidays
   const allEvents = useMemo(() => {
