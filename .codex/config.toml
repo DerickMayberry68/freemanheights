@@ -1,0 +1,10 @@
+[mcp_servers.studiox-filesystem]
+command = "npx"
+args = [
+    "-y",
+    "@modelcontextprotocol/server-filesystem",
+    'C:\Users\deric\source\repos\StudioXConsulting\StudioX\Admin',
+    'C:\Users\deric\source\repos\StudioXConsulting\StudioX\Marketing',
+    'C:\Users\deric\source\repos\StudioXConsulting\StudioX\StudioXAxiom',
+    'C:\Users\deric\source\repos\StudioXConsulting\Projects\FreemanHeights',
+]
