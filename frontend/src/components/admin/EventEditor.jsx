@@ -49,7 +49,9 @@ function fromLocal(v) { return v ? new Date(v).toISOString() : null }
 
 const emptyEvent = {
   title: '', description: '', event_date: '', end_date: '',
-  location: '', image_url: '', is_featured: false,
+  location: '', image_url: '', registration_url: '', is_featured: false,
+  requires_registration: false, requires_permission_slip: false,
+  has_transport: false, max_capacity: '',
   is_cancelled: false, cancellation_note: '',
 }
 
@@ -187,7 +189,12 @@ export default function EventEditor() {
       end_date:          toLocal(evt.end_date) || '',
       location:          evt.location         || '',
       image_url:         evt.image_url        || '',
+      registration_url:  evt.registration_url || '',
       is_featured:       evt.is_featured      ?? false,
+      requires_registration: evt.requires_registration ?? false,
+      requires_permission_slip: evt.requires_permission_slip ?? false,
+      has_transport: evt.has_transport ?? false,
+      max_capacity: evt.max_capacity ?? '',
       is_cancelled:      evt.is_cancelled     ?? false,
       cancellation_note: evt.cancellation_note || '',
     })
@@ -244,6 +251,8 @@ export default function EventEditor() {
     }
 
     setSaving(true); setError(null)
+    const registrationUrl = form.registration_url.trim() || null
+    const usesInternalRegistration = !registrationUrl && form.requires_registration
     const payload = {
       title:             form.title.trim(),
       description:       form.description.trim() || null,
@@ -251,7 +260,12 @@ export default function EventEditor() {
       end_date:          form.end_date ? fromLocal(form.end_date) : null,
       location:          form.location.trim()  || null,
       image_url:         form.image_url.trim() || null,
+      registration_url:  registrationUrl,
       is_featured:       form.is_featured,
+      requires_registration: usesInternalRegistration,
+      requires_permission_slip: usesInternalRegistration && form.requires_permission_slip,
+      has_transport: form.has_transport,
+      max_capacity: usesInternalRegistration && form.max_capacity ? Number(form.max_capacity) : null,
       is_cancelled:      form.is_cancelled,
       cancellation_note: form.is_cancelled ? (form.cancellation_note.trim() || null) : null,
     }
@@ -820,6 +834,50 @@ export default function EventEditor() {
                     onImageChange={(url) => setForm(f => ({ ...f, image_url: url }))}
                     folder="events" label="Event Image"
                   />
+                  <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+                    <p className="text-sm font-semibold text-secondary-dark">Registration</p>
+                    <div>
+                      <label className="block text-sm font-medium text-secondary-dark mb-1">External registration URL</label>
+                      <input type="url" value={form.registration_url}
+                        onChange={(e) => setForm(f => ({
+                          ...f,
+                          registration_url: e.target.value,
+                          requires_registration: e.target.value ? false : f.requires_registration,
+                        }))}
+                        placeholder="Leave blank to use Freeman Heights registration"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-secondary-dark">
+                      <input type="checkbox" checked={form.requires_registration}
+                        disabled={Boolean(form.registration_url)}
+                        onChange={(e) => setForm(f => ({ ...f, requires_registration: e.target.checked }))}
+                        className="rounded border-gray-300" />
+                      Use internal child registration
+                    </label>
+                    {form.requires_registration && !form.registration_url && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-secondary-dark mb-1">Capacity</label>
+                          <input type="number" min="1" value={form.max_capacity}
+                            onChange={(e) => setForm(f => ({ ...f, max_capacity: e.target.value }))}
+                            placeholder="No limit"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-secondary-dark">
+                          <input type="checkbox" checked={form.requires_permission_slip}
+                            onChange={(e) => setForm(f => ({ ...f, requires_permission_slip: e.target.checked }))}
+                            className="rounded border-gray-300" />
+                          Require parent permission
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-secondary-dark">
+                          <input type="checkbox" checked={form.has_transport}
+                            onChange={(e) => setForm(f => ({ ...f, has_transport: e.target.checked }))}
+                            className="rounded border-gray-300" />
+                          Event includes church transportation
+                        </label>
+                      </>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="is_featured" checked={form.is_featured}
                       onChange={(e) => setForm(f => ({ ...f, is_featured: e.target.checked }))}

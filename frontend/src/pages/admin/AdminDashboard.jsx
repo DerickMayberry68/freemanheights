@@ -9,6 +9,7 @@ import AIAssistantEditor from '../../components/admin/AIAssistantEditor'
 import ApprovalsEditor from '../../components/admin/ApprovalsEditor'
 import UserProfileEditor from '../../components/admin/UserProfileEditor'
 import PrayerRequestEditor from '../../components/admin/PrayerRequestEditor'
+import EventRegistrationEditor from '../../components/admin/EventRegistrationEditor'
 
 function AdminHome() {
   return (
@@ -27,6 +28,11 @@ function AdminHome() {
           <h3 className="font-semibold text-secondary-dark">Events</h3>
           <p className="text-sm text-secondary-light mt-1">Manage calendar events</p>
           <Link to="/admin/events" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Events →</Link>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">Registrations</h3>
+          <p className="text-sm text-secondary-light mt-1">Review event rosters and parent submissions</p>
+          <Link to="/admin/registrations" className="text-primary font-medium mt-2 inline-block hover:underline">Manage Registrations &rarr;</Link>
         </div>
         <div className="bg-white rounded-xl shadow p-6">
           <h3 className="font-semibold text-secondary-dark">Sermons</h3>
@@ -103,6 +109,7 @@ export default function AdminDashboard() {
         <Route index element={<AdminHome />} />
         <Route path="approvals" element={<ApprovalsEditor />} />
         <Route path="events" element={<EventEditor />} />
+        <Route path="registrations" element={<EventRegistrationEditor />} />
         <Route path="sermons" element={<SermonEditor />} />
         <Route path="ministries" element={<MinistryEditor />} />
         <Route path="staff" element={<StaffEditor />} />

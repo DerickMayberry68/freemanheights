@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
 import { addDays, format, parse, startOfWeek, getDay } from 'date-fns'
 import { enUS } from 'date-fns/locale'
@@ -108,8 +108,19 @@ export default function EventCalendar() {
     return [...events, ...holidayEvents]
   }, [events])
 
-  const handleSelectEvent = (event) => {
-    setSelectedEvent(event.resource)
+  const handleSelectEvent = async (event) => {
+    if (event.resource?.isHoliday) {
+      setSelectedEvent(event.resource)
+      return
+    }
+
+    const { data } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', event.id)
+      .maybeSingle()
+
+    setSelectedEvent(data || event.resource)
   }
 
   const handleNavigate = (newDate) => {
@@ -299,6 +310,21 @@ export default function EventCalendar() {
               )}
             </div>
             <div className="p-5 border-t border-primary/10 flex justify-end gap-2">
+              {selectedEvent.requires_registration && !selectedEvent.registration_url
+                && !selectedEvent.is_cancelled && !selectedEvent.isHoliday && (
+                <Link
+                  to={`/events/${selectedEvent.id}/register`}
+                  className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark text-sm transition-colors"
+                >
+                  Register
+                </Link>
+              )}
+              {selectedEvent.registration_url && !selectedEvent.is_cancelled && (
+                <a href={selectedEvent.registration_url} target="_blank" rel="noopener noreferrer"
+                  className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark text-sm transition-colors">
+                  Register
+                </a>
+              )}
               {approved && !selectedEvent.isHoliday && (
                 <a
                   href={`/admin/events?edit=${selectedEvent.id}`}

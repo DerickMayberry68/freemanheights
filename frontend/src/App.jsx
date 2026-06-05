@@ -17,6 +17,8 @@ import GivePage from './pages/GivePage'
 import ExplorePage from './pages/ExplorePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ParentRegisterPage from './pages/ParentRegisterPage'
+import EventRegistrationPage from './pages/EventRegistrationPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 
@@ -40,6 +42,8 @@ function App() {
             <Route path="/explore" element={<ExplorePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/parent/register" element={<ParentRegisterPage />} />
+            <Route path="/events/:eventId/register" element={<EventRegistrationPage />} />
             <Route path="/admin/*" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           </Routes>
         </main>

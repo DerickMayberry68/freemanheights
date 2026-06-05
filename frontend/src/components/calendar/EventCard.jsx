@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import { CalendarIcon, MapPinIcon } from '@heroicons/react/24/outline'
+import { Link } from 'react-router-dom'
 
 export default function EventCard({ event }) {
   return (
@@ -33,6 +34,14 @@ export default function EventCard({ event }) {
           >
             Register <span aria-hidden="true">&rarr;</span>
           </a>
+        )}
+        {event.requires_registration && !event.registration_url && !event.is_cancelled && (
+          <Link
+            to={`/events/${event.id}/register`}
+            className="inline-flex items-center gap-1 mt-2 text-primary font-medium hover:text-primary-dark transition-colors"
+          >
+            Register <span aria-hidden="true">&rarr;</span>
+          </Link>
         )}
       </div>
     </div>

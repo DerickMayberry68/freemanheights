@@ -7,6 +7,7 @@ const adminNav = [
   { to: '/admin', label: 'Dashboard' },
   { to: '/admin/approvals', label: 'Approvals' },
   { to: '/admin/events', label: 'Events' },
+  { to: '/admin/registrations', label: 'Registrations' },
   { to: '/admin/sermons', label: 'Sermons' },
   { to: '/admin/ministries', label: 'Ministries' },
   { to: '/admin/staff', label: 'Staff' },
