@@ -81,9 +81,43 @@ export function AuthProvider({ children }) {
     return () => clearTimeout(t)
   }, [session?.user?.id])
 
+  useEffect(() => {
+    if (!session?.user?.id) return undefined
+
+    const refreshAccess = () => {
+      if (document.visibilityState === 'visible') {
+        void fetchApproval()
+      }
+    }
+    const intervalId = setInterval(refreshAccess, 30000)
+    window.addEventListener('focus', refreshAccess)
+    document.addEventListener('visibilitychange', refreshAccess)
+
+    return () => {
+      clearInterval(intervalId)
+      window.removeEventListener('focus', refreshAccess)
+      document.removeEventListener('visibilitychange', refreshAccess)
+    }
+  }, [session?.user?.id])
+
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+
+    try {
+      const { data: hasAccess, error: approvalError } = await supabase.rpc('get_my_approval')
+      if (!approvalError && hasAccess) {
+        const { error: logError } = await supabase.functions.invoke('admin-user-access', {
+          body: { action: 'record-login' },
+        })
+        if (logError) {
+          console.warn('Admin login logging failed:', logError.message)
+        }
+      }
+    } catch (logError) {
+      console.warn('Admin login logging failed:', logError)
+    }
+
     return data
   }
 

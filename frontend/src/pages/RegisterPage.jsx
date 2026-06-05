@@ -36,7 +36,17 @@ export default function RegisterPage() {
     try {
       const { user, session } = await signUp(email, password)
       if (user?.id) {
-        await supabase.rpc('ensure_approval_exists', { p_user_id: user.id, p_email: email }).catch(() => {})
+        try {
+          const { error: approvalError } = await supabase.rpc('ensure_approval_exists', {
+            p_user_id: user.id,
+            p_email: email,
+          })
+          if (approvalError) {
+            console.warn('Approval fallback failed:', approvalError.message)
+          }
+        } catch (approvalError) {
+          console.warn('Approval fallback failed:', approvalError)
+        }
       }
       const emailVerificationRequired = !session
       setSuccess(buildRegistrationMessage(emailVerificationRequired))

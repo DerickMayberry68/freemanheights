@@ -6,6 +6,7 @@ import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 const adminNav = [
   { to: '/admin', label: 'Dashboard' },
   { to: '/admin/approvals', label: 'Approvals' },
+  { to: '/admin/login-history', label: 'Login History' },
   { to: '/admin/events', label: 'Events' },
   { to: '/admin/registrations', label: 'Registrations' },
   { to: '/admin/sermons', label: 'Sermons' },

@@ -10,6 +10,7 @@ import ApprovalsEditor from '../../components/admin/ApprovalsEditor'
 import UserProfileEditor from '../../components/admin/UserProfileEditor'
 import PrayerRequestEditor from '../../components/admin/PrayerRequestEditor'
 import EventRegistrationEditor from '../../components/admin/EventRegistrationEditor'
+import AdminLoginHistory from '../../components/admin/AdminLoginHistory'
 
 function AdminHome() {
   return (
@@ -108,6 +109,7 @@ export default function AdminDashboard() {
       <Routes>
         <Route index element={<AdminHome />} />
         <Route path="approvals" element={<ApprovalsEditor />} />
+        <Route path="login-history" element={<AdminLoginHistory />} />
         <Route path="events" element={<EventEditor />} />
         <Route path="registrations" element={<EventRegistrationEditor />} />
         <Route path="sermons" element={<SermonEditor />} />

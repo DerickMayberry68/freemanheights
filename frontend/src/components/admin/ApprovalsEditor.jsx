@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import Swal from 'sweetalert2'
 import { toast } from 'react-toastify'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/AuthContext'
 
 const ROLES = [
   { value: 'admin', label: 'Admin', description: 'Full access to all features' },
@@ -25,7 +26,10 @@ export default function ApprovalsEditor() {
   const [resendLoadingId, setResendLoadingId] = useState(null)
   const [roleUpdateLoadingId, setRoleUpdateLoadingId] = useState(null)
   const [profileUpdateLoadingId, setProfileUpdateLoadingId] = useState(null)
+  const [statusUpdateLoadingId, setStatusUpdateLoadingId] = useState(null)
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null)
   const [userFilter, setUserFilter] = useState('all')
+  const { user } = useAuth()
 
   const formatDateSafe = (value) => {
     if (!value) return '—'
@@ -288,6 +292,87 @@ export default function ApprovalsEditor() {
     void loadApprovedUsers(userFilter)
   }
 
+  const handleSetActive = async (row) => {
+    const nextActive = !row.is_active
+    const actionLabel = nextActive ? 'reactivate' : 'deactivate'
+    const result = await Swal.fire({
+      title: `${nextActive ? 'Reactivate' : 'Deactivate'} user?`,
+      text: nextActive
+        ? `Restore admin access for ${row.email}?`
+        : `${row.email} will immediately lose admin access.`,
+      icon: nextActive ? 'question' : 'warning',
+      showCancelButton: true,
+      confirmButtonText: nextActive ? 'Reactivate' : 'Deactivate',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+    })
+
+    if (!result.isConfirmed) return
+
+    setStatusUpdateLoadingId(row.approval_id)
+    try {
+      const { error } = await callRpcViaRest('set_admin_user_active', {
+        p_user_id: row.user_id,
+        p_is_active: nextActive,
+      })
+      if (error) throw error
+      toast.success(`User ${actionLabel}d.`)
+      void loadApprovedUsers(userFilter)
+    } catch (error) {
+      toast.error(`Failed to ${actionLabel} user: ${error?.message || 'Unknown error.'}`)
+    } finally {
+      setStatusUpdateLoadingId(null)
+    }
+  }
+
+  const handleDeleteUser = async (row) => {
+    const result = await Swal.fire({
+      title: 'Permanently delete user?',
+      html: `Delete <strong>${escapeHtml(row.email)}</strong>? This removes the Auth account and cannot be undone.`,
+      icon: 'warning',
+      input: 'text',
+      inputPlaceholder: 'Type DELETE to confirm',
+      showCancelButton: true,
+      confirmButtonText: 'Delete user',
+      confirmButtonColor: '#b91c1c',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      preConfirm: (value) => {
+        if (value !== 'DELETE') {
+          Swal.showValidationMessage('Type DELETE to confirm.')
+          return false
+        }
+        return true
+      },
+    })
+
+    if (!result.isConfirmed) return
+
+    setDeleteLoadingId(row.approval_id || row.id)
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-user-access', {
+        body: { action: 'delete-user', userId: row.user_id },
+      })
+      if (error) {
+        let message = error.message
+        try {
+          const errorBody = await error.context?.json()
+          message = errorBody?.error || message
+        } catch {
+          // Keep the function client error when the response body is unavailable.
+        }
+        throw new Error(message)
+      }
+      if (data?.error) throw new Error(data.error)
+      toast.success(data?.warning || 'User deleted.')
+      void Promise.all([loadApprovals(), loadApprovedUsers(userFilter)])
+    } catch (error) {
+      toast.error(`Failed to delete user: ${error?.message || 'Unknown error.'}`)
+    } finally {
+      setDeleteLoadingId(null)
+    }
+  }
+
   const pendingList = approvalRows.filter((r) => !r.approved)
   const approvedList = approvedUsers
 
@@ -346,6 +431,14 @@ export default function ApprovalsEditor() {
                       className="px-4 py-2 border border-primary/30 text-primary hover:bg-primary/5 font-medium rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
                     >
                       {resendLoadingId === row.id ? 'Sending...' : 'Resend Verification'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteUser(row)}
+                      disabled={deleteLoadingId === row.id || row.user_id === user?.id}
+                      className="px-4 py-2 border border-red-300 text-red-700 hover:bg-red-50 font-medium rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
+                    >
+                      {deleteLoadingId === row.id ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 </div>
@@ -439,6 +532,30 @@ export default function ApprovalsEditor() {
                     className="px-4 py-2 border border-secondary-dark/30 text-secondary-dark hover:bg-secondary-dark/5 font-medium rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
                   >
                     {profileUpdateLoadingId === row.approval_id ? 'Saving...' : 'Edit Profile'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetActive(row)}
+                    disabled={statusUpdateLoadingId === row.approval_id || row.user_id === user?.id}
+                    className={`px-4 py-2 border font-medium rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap ${
+                      row.is_active
+                        ? 'border-amber-300 text-amber-700 hover:bg-amber-50'
+                        : 'border-green-300 text-green-700 hover:bg-green-50'
+                    }`}
+                  >
+                    {statusUpdateLoadingId === row.approval_id
+                      ? 'Saving...'
+                      : row.is_active
+                        ? 'Deactivate'
+                        : 'Reactivate'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteUser(row)}
+                    disabled={deleteLoadingId === row.approval_id || row.user_id === user?.id}
+                    className="px-4 py-2 border border-red-300 text-red-700 hover:bg-red-50 font-medium rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
+                  >
+                    {deleteLoadingId === row.approval_id ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </li>
