@@ -2,7 +2,15 @@ import { Navigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../lib/AuthContext'
 
 export default function ProtectedRoute({ children }) {
-  const { session, loading, approved, approvalLoading, refreshApproval, signOut } = useAuth()
+  const {
+    session,
+    loading,
+    approved,
+    approvalLoading,
+    sessionExpired,
+    refreshApproval,
+    signOut,
+  } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -14,7 +22,14 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (!session) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} state={{ from: location }} replace />
+    const reason = sessionExpired ? '&reason=session_expired' : ''
+    return (
+      <Navigate
+        to={`/login?redirect=${encodeURIComponent(location.pathname)}${reason}`}
+        state={{ from: location }}
+        replace
+      />
+    )
   }
 
   if (approvalLoading || approved === null) {

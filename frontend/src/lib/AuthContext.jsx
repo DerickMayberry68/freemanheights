@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase'
 
 const AuthContext = createContext(null)
@@ -8,19 +8,37 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [approved, setApproved] = useState(null)
   const [approvalLoading, setApprovalLoading] = useState(false)
+  const [sessionExpired, setSessionExpired] = useState(false)
   const [userPreferences, setUserPreferences] = useState(null)
   const [preferencesLoading, setPreferencesLoading] = useState(false)
+  const approvalCheckInFlight = useRef(false)
+  const hadAuthenticatedSession = useRef(false)
+  const explicitSignOut = useRef(false)
 
   useEffect(() => {
     let mounted = true
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       if (!mounted) return
+      if (s?.user?.id) {
+        hadAuthenticatedSession.current = true
+      }
       setSession(s)
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (newSession?.user?.id) {
+        hadAuthenticatedSession.current = true
+        setSessionExpired(false)
+      } else if (
+        event === 'SIGNED_OUT' &&
+        hadAuthenticatedSession.current &&
+        !explicitSignOut.current
+      ) {
+        setSessionExpired(true)
+      }
+
       setSession((prevSession) => {
         const prevUserId = prevSession?.user?.id
         const nextUserId = newSession?.user?.id
@@ -41,34 +59,49 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const fetchApproval = async () => {
-    const { data: { session: s } } = await supabase.auth.getSession()
-    if (!s?.user?.id) {
-      setApproved(null)
-      setApprovalLoading(false)
-      return
-    }
-    setApprovalLoading(true)
+  const fetchApproval = async ({ silent = false } = {}) => {
+    if (approvalCheckInFlight.current) return
+    approvalCheckInFlight.current = true
+    if (!silent) setApprovalLoading(true)
+
     let done = false
     const timeout = setTimeout(() => {
       if (done) return
       done = true
-      setApproved(false)
-      setApprovalLoading(false)
+      if (!silent) {
+        setApproved(false)
+        setApprovalLoading(false)
+      }
     }, 8000)
+
     try {
+      const { data: { session: s }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError || !s?.user?.id) {
+        if (hadAuthenticatedSession.current && !explicitSignOut.current) {
+          setSessionExpired(true)
+        }
+        setSession(null)
+        setApproved(null)
+        return
+      }
+
       const { data, error } = await supabase.rpc('get_my_approval')
       if (done) return
       done = true
-      setApproved(error ? false : Boolean(data))
+      if (error) {
+        if (!silent) setApproved(false)
+        return
+      }
+      setApproved(Boolean(data))
     } catch {
-      if (!done) {
+      if (!done && !silent) {
         done = true
         setApproved(false)
       }
     } finally {
       clearTimeout(timeout)
-      setApprovalLoading(false)
+      approvalCheckInFlight.current = false
+      if (!silent) setApprovalLoading(false)
     }
   }
 
@@ -86,7 +119,7 @@ export function AuthProvider({ children }) {
 
     const refreshAccess = () => {
       if (document.visibilityState === 'visible') {
-        void fetchApproval()
+        void fetchApproval({ silent: true })
       }
     }
     const intervalId = setInterval(refreshAccess, 30000)
@@ -141,7 +174,14 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    explicitSignOut.current = true
+    setSessionExpired(false)
+    try {
+      await supabase.auth.signOut()
+    } finally {
+      explicitSignOut.current = false
+      hadAuthenticatedSession.current = false
+    }
   }
 
   const fetchUserPreferences = async () => {
@@ -193,6 +233,7 @@ export function AuthProvider({ children }) {
     loading,
     approved, // true | false | null (null = not yet checked)
     approvalLoading,
+    sessionExpired,
     userPreferences,
     preferencesLoading,
     signIn,
