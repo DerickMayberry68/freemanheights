@@ -28,6 +28,12 @@ const mockSupabase = {
     signOut: () => Promise.resolve(),
   },
   rpc: () => Promise.resolve({ data: false, error: { message: 'Supabase not configured' } }),
+  functions: {
+    invoke: () => Promise.resolve({
+      data: null,
+      error: { message: 'Supabase not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.' },
+    }),
+  },
   storage: {
     from: () => ({
       upload: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),

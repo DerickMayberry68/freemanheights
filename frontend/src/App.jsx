@@ -19,6 +19,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ParentRegisterPage from './pages/ParentRegisterPage'
 import EventRegistrationPage from './pages/EventRegistrationPage'
+import ConnectPage from './pages/ConnectPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 
@@ -44,6 +45,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/parent/register" element={<ParentRegisterPage />} />
             <Route path="/events/:eventId/register" element={<EventRegistrationPage />} />
+            <Route path="/connect" element={<ConnectPage />} />
             <Route path="/admin/*" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           </Routes>
         </main>

@@ -11,6 +11,7 @@ import UserProfileEditor from '../../components/admin/UserProfileEditor'
 import PrayerRequestEditor from '../../components/admin/PrayerRequestEditor'
 import EventRegistrationEditor from '../../components/admin/EventRegistrationEditor'
 import AdminLoginHistory from '../../components/admin/AdminLoginHistory'
+import ConnectionEditor from '../../components/admin/ConnectionEditor'
 
 function AdminHome() {
   return (
@@ -82,6 +83,11 @@ function AdminHome() {
           <Link to="/admin/profile" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Profile →</Link>
         </div>
         <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">Connections</h3>
+          <p className="text-sm text-secondary-light mt-1">Follow up with guests and members</p>
+          <Link to="/admin/connections" className="text-primary font-medium mt-2 inline-block hover:underline">View Connections &rarr;</Link>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
           <h3 className="font-semibold text-secondary-dark">Prayer Requests</h3>
           <p className="text-sm text-secondary-light mt-1">View and respond to prayer requests</p>
           <Link to="/admin/prayer-requests" className="text-primary font-medium mt-2 inline-block hover:underline">Manage Requests →</Link>
@@ -120,6 +126,7 @@ export default function AdminDashboard() {
         <Route path="record" element={<FeatureUnavailable />} />
         <Route path="profile" element={<UserProfileEditor />} />
         <Route path="prayer-requests" element={<PrayerRequestEditor />} />
+        <Route path="connections" element={<ConnectionEditor />} />
       </Routes>
     </AdminLayout>
   )

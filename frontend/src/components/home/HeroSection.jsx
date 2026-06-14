@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import WordMontage from './WordMontage'
+
+const connectionUrl = 'https://www.freemanheights.com/connect?source=website-hero'
 
 export default function HeroSection() {
   return (
@@ -48,7 +51,32 @@ export default function HeroSection() {
         >
           View Calendar
         </Link>
+        <Link
+          to="/connect?source=website-hero"
+          className="px-8 py-4 bg-accent hover:bg-accent-warm text-secondary-dark font-semibold rounded-lg shadow-lg transition-colors xl:hidden"
+        >
+          Connect With Us
+        </Link>
       </div>
+
+      <Link
+        to="/connect?source=website-hero"
+        aria-label="Open the Freeman Heights connection card"
+        className="absolute bottom-20 right-5 z-20 hidden items-center gap-3 rounded-lg bg-white p-3 text-secondary-dark shadow-xl transition-transform hover:-translate-y-1 xl:flex"
+      >
+        <QRCodeSVG
+          value={connectionUrl}
+          size={88}
+          level="M"
+          bgColor="#ffffff"
+          fgColor="#0f2057"
+          title="Freeman Heights connection card QR code"
+        />
+        <span className="max-w-28 text-left">
+          <span className="block text-xs font-semibold uppercase text-primary">New here?</span>
+          <span className="mt-1 block text-sm font-bold leading-5">Scan to connect with us</span>
+        </span>
+      </Link>
     </section>
   )
 }
