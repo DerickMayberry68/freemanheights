@@ -5,6 +5,7 @@ import ServiceTimes from '../components/home/ServiceTimes'
 import PrayerRequestSection from '../components/prayer/PrayerRequestSection'
 import UpcomingEvents from '../components/home/UpcomingEvents'
 import RecentSermons from '../components/home/RecentSermons'
+import OpenPositionsSection from '../components/home/OpenPositionsSection'
 
 export default function HomePage() {
   return (
@@ -14,6 +15,7 @@ export default function HomePage() {
       <BibleVerseDisplay />
       <ServiceTimes />
       <PrayerRequestSection backgroundColor="bg-cream" />
+      <OpenPositionsSection />
       <UpcomingEvents />
       <RecentSermons />
     </>

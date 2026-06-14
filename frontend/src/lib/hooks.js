@@ -46,6 +46,9 @@ export function useEvents(limit = 5, options = {}) {
     const windowEnd = Number.isFinite(daysAhead)
       ? new Date(windowStart.getTime() + daysAhead * 24 * 60 * 60 * 1000)
       : null
+    if (windowEnd) {
+      windowEnd.setHours(23, 59, 59, 999)
+    }
 
     let query = supabase
       .from('events')

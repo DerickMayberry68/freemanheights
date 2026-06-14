@@ -12,6 +12,7 @@ const navLinks = [
   { to: '/calendar', label: 'Calendar' },
   { to: '/staff', label: 'Our Staff' },
   { to: '/give', label: 'Give' },
+  { to: '/opportunities', label: 'Opportunities' },
   { to: '/explore', label: 'Explore' },
 ]
 
@@ -40,7 +41,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex lg:items-center lg:gap-1">
+          <div className="hidden xl:flex xl:items-center xl:gap-1">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to))
               return (
@@ -89,7 +90,7 @@ export default function Header() {
           {/* Mobile menu button */}
           <button
             type="button"
-            className="lg:hidden p-2 rounded-lg text-secondary hover:bg-primary-50 transition-colors"
+            className="xl:hidden p-2 rounded-lg text-secondary hover:bg-primary-50 transition-colors"
             onClick={() => setMobileMenuOpen(true)}
           >
             <Bars3Icon className="h-6 w-6" />

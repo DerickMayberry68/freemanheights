@@ -9,6 +9,8 @@ const adminNav = [
   { to: '/admin/login-history', label: 'Login History' },
   { to: '/admin/events', label: 'Events' },
   { to: '/admin/registrations', label: 'Registrations' },
+  { to: '/admin/opportunities', label: 'Opportunities' },
+  { to: '/admin/applications', label: 'Applications' },
   { to: '/admin/connections', label: 'Connections' },
   { to: '/admin/sermons', label: 'Sermons' },
   { to: '/admin/ministries', label: 'Ministries' },

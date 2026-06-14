@@ -20,6 +20,11 @@ import RegisterPage from './pages/RegisterPage'
 import ParentRegisterPage from './pages/ParentRegisterPage'
 import EventRegistrationPage from './pages/EventRegistrationPage'
 import ConnectPage from './pages/ConnectPage'
+import OpportunitiesPage from './pages/OpportunitiesPage'
+import ApplicantRegisterPage from './pages/ApplicantRegisterPage'
+import ApplicantLoginPage from './pages/ApplicantLoginPage'
+import OpportunityApplyPage from './pages/OpportunityApplyPage'
+import MyApplicationsPage from './pages/MyApplicationsPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 
@@ -46,6 +51,12 @@ function App() {
             <Route path="/parent/register" element={<ParentRegisterPage />} />
             <Route path="/events/:eventId/register" element={<EventRegistrationPage />} />
             <Route path="/connect" element={<ConnectPage />} />
+            <Route path="/opportunities" element={<OpportunitiesPage />} />
+            <Route path="/opportunities/:slug" element={<OpportunitiesPage />} />
+            <Route path="/opportunities/:slug/apply" element={<OpportunityApplyPage />} />
+            <Route path="/opportunities/register" element={<ApplicantRegisterPage />} />
+            <Route path="/opportunities/login" element={<ApplicantLoginPage />} />
+            <Route path="/my-applications" element={<MyApplicationsPage />} />
             <Route path="/admin/*" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           </Routes>
         </main>

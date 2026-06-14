@@ -12,6 +12,8 @@ import PrayerRequestEditor from '../../components/admin/PrayerRequestEditor'
 import EventRegistrationEditor from '../../components/admin/EventRegistrationEditor'
 import AdminLoginHistory from '../../components/admin/AdminLoginHistory'
 import ConnectionEditor from '../../components/admin/ConnectionEditor'
+import OpportunityEditor from '../../components/admin/OpportunityEditor'
+import ApplicationEditor from '../../components/admin/ApplicationEditor'
 
 function AdminHome() {
   return (
@@ -83,6 +85,16 @@ function AdminHome() {
           <Link to="/admin/profile" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Profile →</Link>
         </div>
         <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">Opportunities</h3>
+          <p className="text-sm text-secondary-light mt-1">Publish paid and volunteer openings</p>
+          <Link to="/admin/opportunities" className="text-primary font-medium mt-2 inline-block hover:underline">Manage Opportunities &rarr;</Link>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold text-secondary-dark">Applications</h3>
+          <p className="text-sm text-secondary-light mt-1">Review applicants and update statuses</p>
+          <Link to="/admin/applications" className="text-primary font-medium mt-2 inline-block hover:underline">Review Applications &rarr;</Link>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
           <h3 className="font-semibold text-secondary-dark">Connections</h3>
           <p className="text-sm text-secondary-light mt-1">Follow up with guests and members</p>
           <Link to="/admin/connections" className="text-primary font-medium mt-2 inline-block hover:underline">View Connections &rarr;</Link>
@@ -127,6 +139,8 @@ export default function AdminDashboard() {
         <Route path="profile" element={<UserProfileEditor />} />
         <Route path="prayer-requests" element={<PrayerRequestEditor />} />
         <Route path="connections" element={<ConnectionEditor />} />
+        <Route path="opportunities" element={<OpportunityEditor />} />
+        <Route path="applications" element={<ApplicationEditor />} />
       </Routes>
     </AdminLayout>
   )
