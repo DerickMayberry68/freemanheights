@@ -21,26 +21,17 @@ const WORDS = [
   'chosen',
   'sanctified',
   'mercy',
-  'faith',
-  'hope',
-  'love',
+  'Faith',
+  'Hope',
+  'Love',
   'blessed',
-  'YHWH',
   'God Is Alive',
   'Alive in Christ'
 ]
 
 const HERITAGE_WORDS = [
-  'Shalom',
-  'Adonai',
-  'Torah',
-  'Hesed',
-  'Emunah',
-  'Shema',
-  'שלום',
-  'חסד',
-  'אמת',
-  'אדני'
+  'יהוה',
+  'ישוע',
 ]
 
 const WordMontage = () => {
@@ -92,7 +83,7 @@ const WordMontage = () => {
           key={`${word}-${index}`}
           className={`absolute font-serif font-bold select-none ${
             isSpecial
-              ? 'text-primary-light'
+              ? 'text-accent'
               : isHeritage
                 ? 'text-primary-light/80'
                 : 'text-white'
