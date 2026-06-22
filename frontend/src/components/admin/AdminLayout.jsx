@@ -1,22 +1,53 @@
-import { Link } from 'react-router-dom'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../lib/AuthContext'
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 
-const adminNav = [
-  { to: '/admin', label: 'Dashboard' },
-  { to: '/admin/approvals', label: 'Approvals' },
-  { to: '/admin/login-history', label: 'Login History' },
-  { to: '/admin/events', label: 'Events' },
-  { to: '/admin/registrations', label: 'Registrations' },
-  { to: '/admin/opportunities', label: 'Opportunities' },
-  { to: '/admin/applications', label: 'Applications' },
-  { to: '/admin/connections', label: 'Connections' },
-  { to: '/admin/sermons', label: 'Sermons' },
-  { to: '/admin/ministries', label: 'Ministries' },
-  { to: '/admin/staff', label: 'Staff' },
-  { to: '/admin/bible-verses', label: 'Bible Verses' },
-  { to: '/admin/ai-assistant', label: 'AI Bible Assistant' },
+const adminNavGroups = [
+  {
+    label: 'Overview',
+    items: [
+      { to: '/admin', label: 'Dashboard' },
+    ],
+  },
+  {
+    label: 'People & Access',
+    items: [
+      { to: '/admin/approvals', label: 'Approvals' },
+      { to: '/admin/login-history', label: 'Login History' },
+      { to: '/admin/profile', label: 'Profile Settings' },
+    ],
+  },
+  {
+    label: 'Connections',
+    items: [
+      { to: '/admin/connections', label: 'Connections' },
+    ],
+  },
+  {
+    label: 'Church Content',
+    items: [
+      { to: '/admin/events', label: 'Events' },
+      { to: '/admin/sermons', label: 'Sermons' },
+      { to: '/admin/ministries', label: 'Ministries' },
+      { to: '/admin/staff', label: 'Staff' },
+      { to: '/admin/bible-verses', label: 'Bible Verses' },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { to: '/admin/registrations', label: 'Registrations' },
+      { to: '/admin/opportunities', label: 'Opportunities' },
+      { to: '/admin/applications', label: 'Applications' },
+      { to: '/admin/prayer-requests', label: 'Prayer Requests' },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { to: '/admin/ai-assistant', label: 'AI Bible Assistant' },
+    ],
+  },
 ]
 
 export default function AdminLayout({ children }) {
@@ -30,19 +61,28 @@ export default function AdminLayout({ children }) {
         {user?.email && (
           <p className="text-xs text-gray-400 mb-4 truncate" title={user.email}>{user.email}</p>
         )}
-        <nav className="space-y-2">
-          {adminNav.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`block px-4 py-2 rounded-lg transition-colors ${
-                location.pathname === item.to
-                  ? 'bg-primary text-white font-semibold'
-                  : 'text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              {item.label}
-            </Link>
+        <nav className="space-y-5">
+          {adminNavGroups.map((group) => (
+            <div key={group.label}>
+              <p className="px-4 text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                {group.label}
+              </p>
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`block px-4 py-2 rounded-lg transition-colors ${
+                      location.pathname === item.to
+                        ? 'bg-primary text-white font-semibold'
+                        : 'text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
         <div className="mt-auto space-y-2">
@@ -58,7 +98,7 @@ export default function AdminLayout({ children }) {
             to="/"
             className="block text-sm text-gray-400 hover:text-white"
           >
-            ← Back to Site
+            Back to Site
           </Link>
         </div>
       </aside>

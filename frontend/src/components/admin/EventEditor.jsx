@@ -7,7 +7,7 @@ import {
   PencilIcon, TrashIcon, PlusIcon, XMarkIcon,
   NoSymbolIcon, ArrowPathIcon, CheckCircleIcon,
 } from '@heroicons/react/24/outline'
-import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table'
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import ImageUpload from './ImageUpload'
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -84,6 +84,7 @@ export default function EventEditor() {
   const [events,  setEvents]  = useState([])
   const [loading, setLoading] = useState(true)
   const [eventRange, setEventRange] = useState('upcoming')
+  const [expandedSeriesIds, setExpandedSeriesIds] = useState(() => new Set())
 
   // Series list
   const [seriesList,    setSeriesList]    = useState([])
@@ -110,9 +111,16 @@ export default function EventEditor() {
   const [cancelConfirm,      setCancelConfirm]      = useState(null)
   const [seriesDeleteConfirm, setSeriesDeleteConfirm] = useState(null)
 
-  const [sorting, setSorting] = useState([{ id: 'event_date', desc: false }])
-
   const modalRef = useRef(null)
+
+  const toggleSeriesExpanded = (seriesId) => {
+    setExpandedSeriesIds((current) => {
+      const next = new Set(current)
+      if (next.has(seriesId)) next.delete(seriesId)
+      else next.add(seriesId)
+      return next
+    })
+  }
 
   // ── Data loading ──────────────────────────────────────────────────────────
 
@@ -449,19 +457,114 @@ export default function EventEditor() {
 
   // ── Events table columns ──────────────────────────────────────────────────
 
+  const eventDisplayRows = useMemo(() => {
+    const rows = []
+    const seriesGroups = new Map()
+
+    events.forEach((event) => {
+      if (!event.series_id) {
+        rows.push({ ...event, displayType: 'event', displayId: event.id })
+        return
+      }
+
+      const seriesId = event.series_id
+      if (!seriesGroups.has(seriesId)) {
+        const group = {
+          seriesId,
+          series: event.event_series,
+          occurrences: [],
+        }
+        seriesGroups.set(seriesId, group)
+        rows.push({
+          displayType: 'series-summary',
+          displayId: `series-${seriesId}`,
+          id: `series-${seriesId}`,
+          series_id: seriesId,
+          title: event.event_series?.title || event.title,
+          event_date: event.event_date,
+          location: event.location,
+          event_series: event.event_series,
+          group,
+        })
+      }
+
+      seriesGroups.get(seriesId).occurrences.push({
+        ...event,
+        displayType: 'series-occurrence',
+        displayId: event.id,
+      })
+    })
+
+    return rows.flatMap((row) => {
+      if (row.displayType !== 'series-summary') return [row]
+
+      const occurrences = row.group.occurrences
+      const firstOccurrence = occurrences[0]
+      const allLocations = new Set(occurrences.map((event) => event.location || '').filter(Boolean))
+      const summaryRow = {
+        ...row,
+        title: row.event_series?.title || firstOccurrence?.title || row.title,
+        event_date: firstOccurrence?.event_date || row.event_date,
+        location: allLocations.size === 1 ? firstOccurrence.location : '',
+        occurrenceCount: occurrences.length,
+        isExpanded: expandedSeriesIds.has(row.series_id),
+      }
+
+      if (!summaryRow.isExpanded) return [summaryRow]
+      return [summaryRow, ...occurrences]
+    })
+  }, [events, expandedSeriesIds])
+
+  const summaryDatePrefix = eventRange === 'upcoming'
+    ? 'Next'
+    : eventRange === 'past'
+      ? 'Most recent'
+      : 'Latest shown'
+
   const columns = useMemo(() => [
     {
       accessorKey: 'title',
       header: 'Title',
+      enableSorting: false,
       cell: ({ row }) => {
         const evt = row.original
+        if (evt.displayType === 'series-summary') {
+          const hiddenCount = Math.max((evt.occurrenceCount || 0) - 1, 0)
+
+          return (
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleSeriesExpanded(evt.series_id)}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-primary/20 text-primary hover:bg-primary/10"
+                  aria-label={evt.isExpanded ? `Collapse ${evt.title}` : `Expand ${evt.title}`}
+                >
+                  {evt.isExpanded ? '-' : '+'}
+                </button>
+                <span className="font-semibold text-secondary-dark">{evt.title}</span>
+                <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">Recurring series</span>
+                <span className="text-xs bg-gray-100 text-secondary-light px-1.5 py-0.5 rounded-full">
+                  {evt.occurrenceCount} {evt.occurrenceCount === 1 ? 'date' : 'dates'}
+                </span>
+              </div>
+              <p className="pl-9 text-xs text-secondary-light">{describeRecurrence(evt.event_series)}</p>
+              {!evt.isExpanded && hiddenCount > 0 && (
+                <p className="pl-9 text-xs text-secondary-light">
+                  {hiddenCount} more {hiddenCount === 1 ? 'date' : 'dates'} hidden in this range.
+                </p>
+              )}
+            </div>
+          )
+        }
+
         return (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className={`flex flex-wrap items-center gap-1.5 ${evt.displayType === 'series-occurrence' ? 'pl-9' : ''}`}>
             <span className={`font-medium ${evt.is_cancelled ? 'line-through text-secondary-light' : 'text-secondary-dark'}`}>
               {evt.title}
             </span>
             {evt.series_id && (
-              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">↻ Recurring</span>
+              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">Recurring date</span>
             )}
             {evt.is_cancelled && (
               <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Cancelled</span>
@@ -476,12 +579,21 @@ export default function EventEditor() {
     {
       accessorKey: 'event_date',
       header: 'Date',
-      cell: ({ getValue }) => format(new Date(getValue()), 'MMM d, yyyy • h:mm a'),
+      enableSorting: false,
+      cell: ({ getValue, row }) => {
+        const formattedDate = format(new Date(getValue()), 'MMM d, yyyy h:mm a')
+        if (row.original.displayType !== 'series-summary') return formattedDate
+        return `${summaryDatePrefix}: ${formattedDate}`
+      },
     },
     {
       accessorKey: 'location',
       header: 'Location',
-      cell: ({ getValue }) => getValue() || '—',
+      enableSorting: false,
+      cell: ({ getValue, row }) => {
+        if (row.original.displayType === 'series-summary' && !getValue()) return 'Varies by date'
+        return getValue() || '-'
+      },
     },
     {
       id: 'actions',
@@ -489,6 +601,22 @@ export default function EventEditor() {
       enableSorting: false,
       cell: ({ row }) => {
         const evt = row.original
+        if (evt.displayType === 'series-summary') {
+          return (
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => toggleSeriesExpanded(evt.series_id)}
+                className="text-primary hover:underline text-sm font-medium"
+              >
+                {evt.isExpanded
+                  ? 'Hide dates'
+                  : `Show ${evt.occurrenceCount} ${evt.occurrenceCount === 1 ? 'date' : 'dates'}`}
+              </button>
+            </div>
+          )
+        }
+
         const isSeries = !!evt.series_id
         return (
           <div className="flex items-center justify-end gap-3">
@@ -546,13 +674,11 @@ export default function EventEditor() {
         )
       },
     },
-  ], [deleteConfirm, cancelConfirm, saving])
+  ], [deleteConfirm, cancelConfirm, saving, eventRange, expandedSeriesIds])
 
   const table = useReactTable({
-    data: events, columns,
-    state: { sorting }, onSortingChange: setSorting,
+    data: eventDisplayRows, columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   })
   const selectedEventRange = eventRangeOptions.find((option) => option.value === eventRange) || eventRangeOptions[0]
 

@@ -57,6 +57,12 @@ Run the phases in order. Do not skip ahead. Each phase has a clear exit criterio
 ### 2.4 `speckit.checklist` — Pre-flight
 - Confirm:
   - Branch is clean / on the right branch.
+  - Latest committed code has been fetched and reconciled before implementation:
+    - Run `git fetch --all --prune`.
+    - Compare local and upstream with `git rev-list --left-right --count HEAD...origin/<branch>`.
+    - If behind, pull/rebase before implementation approval.
+    - If local changes exist, use a safe preserve-first workflow such as `git pull --rebase --autostash`, then resolve any conflicts before new edits.
+    - Re-run relevant checklist/build checks after conflict resolution.
   - Required env vars are present (e.g. `frontend/.env`, `mobile/lib/config/app_config.dart`).
   - Migrations / seed data exist for tables touched.
   - Linter / type-check is green before changes.
@@ -97,4 +103,4 @@ Then drive the user through the phases. Do not "preview the diff" by writing it 
 
 ---
 
-_Last updated: speckit gating policy adopted._
+_Last updated: speckit checklist now requires git sync before implementation._

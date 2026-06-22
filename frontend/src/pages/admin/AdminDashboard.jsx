@@ -16,93 +16,126 @@ import OpportunityEditor from '../../components/admin/OpportunityEditor'
 import ApplicationEditor from '../../components/admin/ApplicationEditor'
 
 function AdminHome() {
+  const primaryActions = [
+    {
+      title: 'Review Access',
+      description: 'Approve new admin registrations, deactivate old accounts, and check login history.',
+      links: [
+        { to: '/admin/approvals', label: 'Manage users' },
+        { to: '/admin/login-history', label: 'View login history' },
+      ],
+    },
+    {
+      title: 'Follow Up',
+      description: 'Review guest connection cards, member requests, and ministry follow-up items.',
+      links: [
+        { to: '/admin/connections', label: 'Connections' },
+        { to: '/admin/prayer-requests', label: 'Prayer requests' },
+      ],
+    },
+    {
+      title: 'Opportunities & Applications',
+      description: 'Publish paid or volunteer openings and review submitted applications.',
+      links: [
+        { to: '/admin/opportunities', label: 'Opportunities' },
+        { to: '/admin/applications', label: 'Applications' },
+      ],
+    },
+    {
+      title: 'Manage This Week',
+      description: 'Keep calendar events and event registration rosters current.',
+      links: [
+        { to: '/admin/events', label: 'Edit events' },
+        { to: '/admin/registrations', label: 'Review registrations' },
+      ],
+    },
+    {
+      title: 'Update Church Content',
+      description: 'Maintain ministry, staff, sermon, and Bible verse content for the public site.',
+      links: [
+        { to: '/admin/sermons', label: 'Sermons' },
+        { to: '/admin/ministries', label: 'Ministries' },
+        { to: '/admin/staff', label: 'Staff' },
+        { to: '/admin/bible-verses', label: 'Bible verses' },
+      ],
+    },
+  ]
+
+  const statusCards = [
+    { label: 'Admin access', value: 'Protected', note: 'Inactive users are blocked by database checks.' },
+    { label: 'Login auditing', value: 'Enabled', note: 'Successful admin logins are recorded.' },
+    { label: 'Public workflows', value: 'Connected', note: 'Connection cards, opportunities, and applications are wired into admin.' },
+  ]
+
   return (
     <div>
-      <h2 className="text-2xl font-bold text-secondary-dark mb-4">Admin Dashboard</h2>
-      <p className="text-secondary-light mb-6">
-        Welcome to the Freeman Heights admin area. Use the sidebar to manage events, sermons, and ministries.
-      </p>
-        <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Approvals</h3>
-          <p className="text-sm text-secondary-light mt-1">Approve new admin registrations</p>
-          <Link to="/admin/approvals" className="text-primary font-medium mt-2 inline-block hover:underline">Manage Approvals →</Link>
+      <div className="mb-8 rounded-2xl bg-white border border-primary/10 shadow-sm p-6">
+        <p className="text-sm font-semibold uppercase tracking-wide text-primary">Admin Dashboard</p>
+        <h2 className="mt-2 text-3xl font-serif font-bold text-secondary-dark">Freeman Heights Admin</h2>
+        <p className="mt-3 max-w-3xl text-secondary-light">
+          Use the grouped menu for full navigation. This dashboard keeps the common operational work and current admin controls in one place.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link to="/admin/events" className="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-dark transition-colors">
+            Manage Events
+          </Link>
+          <Link to="/admin/connections" className="rounded-lg border border-primary/30 px-4 py-2 font-semibold text-primary hover:bg-primary/5 transition-colors">
+            Connections
+          </Link>
+          <Link to="/admin/applications" className="rounded-lg border border-primary/30 px-4 py-2 font-semibold text-primary hover:bg-primary/5 transition-colors">
+            Applications
+          </Link>
         </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Events</h3>
-          <p className="text-sm text-secondary-light mt-1">Manage calendar events</p>
-          <Link to="/admin/events" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Events →</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Registrations</h3>
-          <p className="text-sm text-secondary-light mt-1">Review event rosters and parent submissions</p>
-          <Link to="/admin/registrations" className="text-primary font-medium mt-2 inline-block hover:underline">Manage Registrations &rarr;</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Sermons</h3>
-          <p className="text-sm text-secondary-light mt-1">Manage sermon archive</p>
-          <Link to="/admin/sermons" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Sermons →</Link>
-        </div>
-        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-100 p-6 opacity-75 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="font-semibold text-secondary-dark">Record Livestream</h3>
-            <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Coming soon
-            </span>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3 mb-8">
+        {statusCards.map((card) => (
+          <div key={card.label} className="rounded-xl border border-primary/10 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-secondary-light">{card.label}</p>
+            <p className="mt-2 text-2xl font-bold text-secondary-dark">{card.value}</p>
+            <p className="mt-2 text-sm leading-6 text-secondary-light">{card.note}</p>
           </div>
-          <p className="mt-1 text-sm text-secondary-light">Recording management is disabled until this feature is ready.</p>
-          <button
-            type="button"
-            disabled
-            className="mt-3 inline-block cursor-not-allowed rounded-lg bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-500"
-          >
-            Unavailable
-          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-3">
+        {primaryActions.map((section) => (
+          <div key={section.title} className="rounded-xl border border-primary/10 bg-white p-6 shadow-sm">
+            <h3 className="font-semibold text-secondary-dark">{section.title}</h3>
+            <p className="mt-2 text-sm leading-6 text-secondary-light">{section.description}</p>
+            <div className="mt-5 flex flex-col gap-2">
+              {section.links.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="rounded-lg border border-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/5 transition-colors"
+                >
+                  {link.label} <span aria-hidden="true">&rarr;</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8 grid gap-5 lg:grid-cols-2">
+        <div className="rounded-xl border border-primary/10 bg-white p-6 shadow-sm">
+          <h3 className="font-semibold text-secondary-dark">Personal settings</h3>
+          <p className="mt-2 text-sm leading-6 text-secondary-light">
+            Update your own profile preferences separately from site content and access management.
+          </p>
+          <Link to="/admin/profile" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">
+            Open profile settings <span aria-hidden="true">&rarr;</span>
+          </Link>
         </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Ministries</h3>
-          <p className="text-sm text-secondary-light mt-1">Manage ministry info</p>
-          <Link to="/admin/ministries" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Ministries →</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Staff</h3>
-          <p className="text-sm text-secondary-light mt-1">Manage staff members</p>
-          <Link to="/admin/staff" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Staff →</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Bible Verses</h3>
-          <p className="text-sm text-secondary-light mt-1">Manage rotating Bible verses</p>
-          <Link to="/admin/bible-verses" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Bible Verses →</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">AI Bible Assistant</h3>
-          <p className="text-sm text-secondary-light mt-1">AI-powered Bible study and sermon prep</p>
-          <Link to="/admin/ai-assistant" className="text-primary font-medium mt-2 inline-block hover:underline">Open Assistant →</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Profile Settings</h3>
-          <p className="text-sm text-secondary-light mt-1">Manage your personal preferences</p>
-          <Link to="/admin/profile" className="text-primary font-medium mt-2 inline-block hover:underline">Edit Profile →</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Opportunities</h3>
-          <p className="text-sm text-secondary-light mt-1">Publish paid and volunteer openings</p>
-          <Link to="/admin/opportunities" className="text-primary font-medium mt-2 inline-block hover:underline">Manage Opportunities &rarr;</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Applications</h3>
-          <p className="text-sm text-secondary-light mt-1">Review applicants and update statuses</p>
-          <Link to="/admin/applications" className="text-primary font-medium mt-2 inline-block hover:underline">Review Applications &rarr;</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Connections</h3>
-          <p className="text-sm text-secondary-light mt-1">Follow up with guests and members</p>
-          <Link to="/admin/connections" className="text-primary font-medium mt-2 inline-block hover:underline">View Connections &rarr;</Link>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="font-semibold text-secondary-dark">Prayer Requests</h3>
-          <p className="text-sm text-secondary-light mt-1">View and respond to prayer requests</p>
-          <Link to="/admin/prayer-requests" className="text-primary font-medium mt-2 inline-block hover:underline">Manage Requests →</Link>
+        <div className="rounded-xl border border-primary/10 bg-white p-6 shadow-sm">
+          <h3 className="font-semibold text-secondary-dark">Study and prep tools</h3>
+          <p className="mt-2 text-sm leading-6 text-secondary-light">
+            Use the AI Bible Assistant for Bible search, cross references, context, and sermon preparation.
+          </p>
+          <Link to="/admin/ai-assistant" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">
+            Open AI Bible Assistant <span aria-hidden="true">&rarr;</span>
+          </Link>
         </div>
       </div>
     </div>
