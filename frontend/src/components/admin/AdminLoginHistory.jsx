@@ -70,7 +70,7 @@ export default function AdminLoginHistory() {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(15)
   const [sort, setSort] = useState({ field: 'logged_in_at', direction: 'desc' })
   const [totalCount, setTotalCount] = useState(0)
   const [refreshKey, setRefreshKey] = useState(0)
