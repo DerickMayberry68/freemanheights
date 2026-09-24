@@ -17,6 +17,11 @@ const emptyForm = {
   location: '',
   schedule: '',
   compensation: '',
+  contact_email: '',
+  contact_cc_email: '',
+  contact_phone: '',
+  contact_mailing_address: '',
+  application_instructions: '',
   closing_date: '',
   status: 'draft',
   display_order: 0,
@@ -24,7 +29,8 @@ const emptyForm = {
 }
 
 const slugify = (value) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-const lines = (value) => value.split('\n').map((item) => item.trim()).filter(Boolean)
+const text = (value) => (value ?? '').trim()
+const lines = (value) => (value ?? '').split('\n').map((item) => item.trim()).filter(Boolean)
 
 export default function OpportunityEditor() {
   const { user } = useAuth()
@@ -57,6 +63,7 @@ export default function OpportunityEditor() {
   const edit = (item) => {
     setEditingId(item.id)
     setForm({
+      ...emptyForm,
       ...item,
       responsibilities: (item.responsibilities || []).join('\n'),
       requirements: (item.requirements || []).join('\n'),
@@ -95,48 +102,62 @@ export default function OpportunityEditor() {
     event.preventDefault()
     setSaving(true)
     setError('')
-    const payload = {
-      church_id: churchId,
-      opportunity_type: form.opportunity_type,
-      title: form.title.trim(),
-      slug: slugify(form.slug || form.title),
-      summary: form.summary.trim(),
-      description: form.description.trim() || null,
-      responsibilities: lines(form.responsibilities),
-      requirements: lines(form.requirements),
-      location: form.location.trim() || null,
-      schedule: form.schedule.trim() || null,
-      compensation: form.opportunity_type === 'paid' ? form.compensation.trim() || null : null,
-      closing_date: form.closing_date || null,
-      status: form.status,
-      display_order: Number(form.display_order) || 0,
-      application_questions: form.application_questions.map((question) => ({
-        ...question,
-        label: question.label.trim(),
-        options: question.type === 'select'
-          ? (Array.isArray(question.options) ? question.options : String(question.options).split(',')).map((option) => option.trim()).filter(Boolean)
-          : [],
-      })).filter((question) => question.label),
-    }
+    try {
+      const payload = {
+        church_id: churchId,
+        opportunity_type: form.opportunity_type,
+        title: text(form.title),
+        slug: slugify(form.slug || form.title),
+        summary: text(form.summary),
+        description: text(form.description) || null,
+        responsibilities: lines(form.responsibilities),
+        requirements: lines(form.requirements),
+        location: text(form.location) || null,
+        schedule: text(form.schedule) || null,
+        compensation: form.opportunity_type === 'paid' ? text(form.compensation) || null : null,
+        contact_email: text(form.contact_email) || null,
+        contact_cc_email: text(form.contact_cc_email) || null,
+        contact_phone: text(form.contact_phone) || null,
+        contact_mailing_address: text(form.contact_mailing_address) || null,
+        application_instructions: text(form.application_instructions) || null,
+        closing_date: form.closing_date || null,
+        status: form.status,
+        display_order: Number(form.display_order) || 0,
+        application_questions: form.application_questions.map((question) => ({
+          ...question,
+          label: question.label.trim(),
+          options: question.type === 'select'
+            ? (Array.isArray(question.options) ? question.options : String(question.options).split(',')).map((option) => option.trim()).filter(Boolean)
+            : [],
+        })).filter((question) => question.label),
+      }
 
-    if (!payload.title || !payload.slug || !payload.summary) {
-      setError('Title, URL slug, and summary are required.')
+      if (!payload.title || !payload.slug || !payload.summary) {
+        setError('Title, URL slug, and summary are required.')
+        return
+      }
+
+      if (payload.contact_cc_email && !payload.contact_email) {
+        setError('Enter a contact email before adding a CC email.')
+        return
+      }
+
+      const result = editingId
+        ? await supabase.from('opportunities').update(payload).eq('id', editingId)
+        : await supabase.from('opportunities').insert({ ...payload, created_by: user?.id || null })
+
+      if (result.error) {
+        setError(result.error.message)
+      } else {
+        toast.success(editingId ? 'Opportunity updated.' : 'Opportunity created.')
+        setOpen(false)
+        load()
+      }
+    } catch (saveError) {
+      setError(saveError.message || 'Unable to save this opportunity. Please try again.')
+    } finally {
       setSaving(false)
-      return
     }
-
-    const result = editingId
-      ? await supabase.from('opportunities').update(payload).eq('id', editingId)
-      : await supabase.from('opportunities').insert({ ...payload, created_by: user?.id || null })
-
-    if (result.error) {
-      setError(result.error.message)
-    } else {
-      toast.success(editingId ? 'Opportunity updated.' : 'Opportunity created.')
-      setOpen(false)
-      load()
-    }
-    setSaving(false)
   }
 
   const changeStatus = async (item, status) => {
@@ -251,6 +272,28 @@ export default function OpportunityEditor() {
                     <input type="date" value={form.closing_date || ''} onChange={(event) => setField('closing_date', event.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5" />
                   </label>
                 </div>
+
+                <fieldset className="space-y-4 border-t pt-5">
+                  <legend className="px-1 font-bold text-secondary-dark">How to apply &amp; questions</legend>
+                  <p className="text-sm text-secondary-light">Optional contact details shown publicly for this position.</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="text-sm font-semibold text-secondary-dark">Contact email
+                      <input type="email" maxLength={254} required={Boolean(form.contact_cc_email?.trim())} value={form.contact_email || ''} onChange={(event) => setField('contact_email', event.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5" />
+                    </label>
+                    <label className="text-sm font-semibold text-secondary-dark">CC email
+                      <input type="email" maxLength={254} value={form.contact_cc_email || ''} onChange={(event) => setField('contact_cc_email', event.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5" />
+                    </label>
+                    <label className="text-sm font-semibold text-secondary-dark">Inquiry phone
+                      <input type="tel" maxLength={50} value={form.contact_phone || ''} onChange={(event) => setField('contact_phone', event.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5" />
+                    </label>
+                  </div>
+                  <label className="block text-sm font-semibold text-secondary-dark">Mailing address
+                    <textarea rows={3} maxLength={1000} value={form.contact_mailing_address || ''} onChange={(event) => setField('contact_mailing_address', event.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5" />
+                  </label>
+                  <label className="block text-sm font-semibold text-secondary-dark">Application instructions
+                    <textarea rows={3} maxLength={3000} value={form.application_instructions || ''} onChange={(event) => setField('application_instructions', event.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5" />
+                  </label>
+                </fieldset>
 
                 <div className="border-t pt-5">
                   <div className="flex items-center justify-between">

@@ -109,6 +109,29 @@ export default function OpportunitiesPage() {
                 </ul>
               </section>
             )}
+            {[selected.contact_email, selected.contact_cc_email, selected.contact_phone, selected.contact_mailing_address, selected.application_instructions].some((value) => value?.trim()) && (
+              <section className="mt-8 rounded-lg border border-primary/15 bg-cream-dark/30 p-5 sm:p-6">
+                <h2 className="font-serif text-2xl font-bold text-secondary-dark">How to apply &amp; questions</h2>
+                {selected.application_instructions && <p className="mt-3 whitespace-pre-wrap break-words leading-7 text-secondary">{selected.application_instructions}</p>}
+                <dl className="mt-4 space-y-4 text-secondary">
+                  {selected.contact_email && <div>
+                    <dt className="font-semibold text-secondary-dark">Email</dt>
+                    <dd className="mt-1 break-words">
+                      <a href={`mailto:${encodeURIComponent(selected.contact_email)}${selected.contact_cc_email ? `?cc=${encodeURIComponent(selected.contact_cc_email)}` : ''}`} className="font-medium text-primary underline underline-offset-4">{selected.contact_email}</a>
+                      {selected.contact_cc_email && <p className="mt-1 text-sm">CC: {selected.contact_cc_email}</p>}
+                    </dd>
+                  </div>}
+                  {selected.contact_mailing_address && <div>
+                    <dt className="font-semibold text-secondary-dark">Mail</dt>
+                    <dd className="mt-1 whitespace-pre-wrap break-words">{selected.contact_mailing_address}</dd>
+                  </div>}
+                  {selected.contact_phone && <div>
+                    <dt className="font-semibold text-secondary-dark">Questions? Call</dt>
+                    <dd className="mt-1"><a href={`tel:${selected.contact_phone.replace(/[^+0-9]/g, '')}`} className="break-words font-medium text-primary underline underline-offset-4">{selected.contact_phone}</a></dd>
+                  </div>}
+                </dl>
+              </section>
+            )}
             <div className="mt-9 flex flex-wrap gap-3 border-t border-gray-200 pt-6">
               <Link to={`/opportunities/${selected.slug}/apply`}
                 className="rounded-lg bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-dark">
